@@ -5,38 +5,40 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.0.1
+;; Version: 0.0.5
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
-;;
+;; Provides font-lock and basic REPL integration for the J programming language
+;; (http://www.jsoftware.com)
 
 ;;; License:
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License
-;; as published by the Free Software Foundation; either version 3
-;; of the License, or (at your option) any later version.
+;; This program is free software; you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free Software
+;; Foundation; either version 3 of the License, or (at your option) any later
+;; version.
 ;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; This program is distributed in the hope that it will be useful, but WITHOUT
+;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+;; details.
 ;;
-;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; You should have received a copy of the GNU General Public License along with
+;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
+;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+;; USA.
 
 ;;; Code:
+
 
 (require 'comint)
 
 
-(defconst j-mode-version "0.0.1"
+(defconst j-mode-version "0.0.5"
   "`j-mode' version")
 
 (defgroup j-mode nil
@@ -44,50 +46,69 @@
   :group 'languages
   :prefix "j-")
 
-(defgroup j-faces nil
-  "Faces for j-mode font-lock"
-  :group 'j-)
-
 (defcustom j-mode-hook nil
   "Hook called by `j-mode'."
   :type 'hook
   :group 'j-)
 
 
-(defmacro build-face ( name &rest body )
+(defgroup j-faces nil
+  "Faces for j-mode font-lock"
+  :group 'j-)
+
+(defmacro build-faces ( &rest faces )
   `(progn
-     (defvar ,name ',name)
-     (defface ,name ,@body)))
+     ,@(mapcan (lambda ( x )
+                 (let* ((name (car x))
+                        (body (cdr x)))
+                   `((defvar ,name ',name)
+                     (defface ,name ,@body))))
+               faces)))
 
-(build-face
- j-verb-face
- `((t (:foreground "Red")))
- "Font Lock mode face used to higlight vrebs"
- :group 'j-faces)
+(build-faces
+ (j-verb-face
+  `((t (:foreground "Red")))
+  "Font Lock mode face used to higlight vrebs"
+  :group 'j-faces)
 
-(build-face
- j-adverb-face
- `((t (:foreground "Green")))
- "Font Lock mode face used to higlight adverbs"
- :group 'j-faces)
+ (j-adverb-face
+  `((t (:foreground "Green")))
+  "Font Lock mode face used to higlight adverbs"
+  :group 'j-faces)
 
-(build-face
- j-conjunction-face
- `((t (:foreground "Blue")))
- "Font Lock mode face used to higlight conjunctions"
- :group 'j-faces)
+ (j-conjunction-face
+  `((t (:foreground "Blue")))
+  "Font Lock mode face used to higlight conjunctions"
+  :group 'j-faces)
 
-(build-face
- j-other-face
- `((t (:foreground "Black")))
- "Font Lock mode face used to higlight others"
- :group 'j-faces)
+ (j-other-face
+  `((t (:foreground "Black")))
+  "Font Lock mode face used to higlight others"
+  :group 'j-faces))
 
 
 (defvar j-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c !") 'j-console)
+    (define-key map (kbd "C-c C-c") 'j-execute-buffer)
+    (define-key map (kbd "C-c C-r") 'j-execute-region)
+    (define-key map (kbd "C-c C-l") 'j-execute-line)
     map)
   "Keymap for J major mode")
+
+
+(defvar j-mode-menu nil "")
+(easy-menu-define j-mode-menu j-mode-map "J Mode menu"
+  '("J"
+    ["Start J Console" j-console t]
+    ["Execute Buffer" j-execute-buffer]
+    ["Execute Region" j-execute-region]
+    ["Execute Line" j-execute-line]
+    "---"
+    ["Help on J-mode" describe-mode t]
+    "---"
+    ("Sub-Menu")))
+
 
 (defvar j-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -108,6 +129,7 @@
     (modify-syntax-entry ?\r ">" table)
     table)
   "Syntax table for j-mode")
+
 
 (defvar j-mode-constants '())
 
@@ -184,12 +206,11 @@
 (defun j-font-lock-syntactic-face-function (state)
   (if (nth 3 state) font-lock-string-face ;; String Context
     (let* ((start-pos (nth 8 state)))
-      ;; Comment context
       (and (<= (+ start-pos 3) (point-max))
-               (eq (char-after start-pos) ?N)
-               (string= (buffer-substring-no-properties
-                         start-pos (+ start-pos 3)) "NB.")
-               font-lock-comment-face))))
+           (eq (char-after start-pos) ?N)
+           (string= (buffer-substring-no-properties
+                     start-pos (+ start-pos 3)) "NB.")
+           font-lock-comment-face))))
 
 
 ;;;###autoload
@@ -216,74 +237,81 @@
   (run-mode-hooks 'j-mode-hook))
 
 
-
-
-(defcustom j-command "jconsole"
+(defcustom j-cmd "jconsole"
   ""
   :type 'string
   :group 'j-)
 
-(defcustom j-command-args '()
+(defcustom j-cmd-args '()
   ""
   :type 'string
   :group 'j-)
 
-(defcustom j-command-conf nil
+(defcustom j-cmd-conf nil
   ""
   :type 'string
   :group 'j-)
 
+(defcustom j-cmd-buffer-name "J"
+  ""
+  :type 'string
+  :group 'j-)
 
 (defun j-create-interpreter ()
-  (apply 'make-comint "J" j-command j-command-conf j-command-args))
+  (setq comint-process-echoes t)
+  (apply 'make-comint j-cmd-buffer-name j-cmd j-cmd-conf j-cmd-args)
+  (add-hook
+   'comint-preoutput-filter-functions
+   (lambda ( output )
+     (if (string-match "^[ \r\n\t]+" output)
+         (concat "  " (replace-match "" nil t output))
+       output))))
 
 (defun j-ensure-interpreter ()
-  (or (get-process "J")
+  (or (get-process j-cmd-buffer-name)
       (progn
         (j-create-interpreter)
-        (get-process "J"))))
+        (get-process j-cmd-buffer-name))))
 
+(defmacro defun-wp ( name label args interactive &rest body )
+  `(defun ,name ,args
+     ,interactive
+     (let* ((,@label (j-ensure-interpreter)))
+       ,@body)))
 
-;; with process
-(defmacro w-p ( binding &rest body )
-  `(let* ((,binding (j-ensure-interpreter)))
-     ,@body))
-
-
-(defun j-execute-line ()
+(defun-wp j-execute-line ( interpreter ) ()
   (interactive)
-  (w-p interpreter
-       (let* ((line (buffer-substring-no-properties (point-at-bol)
-                                                    (point-at-eol))))
-         (pop-to-buffer (process-buffer interpreter))
-         (goto-char (point-max))
-         (insert-string line)
-         (comint-send-input))))
+  (let* ((line (buffer-substring-no-properties (point-at-bol)
+                                               (point-at-eol))))
+    (pop-to-buffer (process-buffer interpreter))
+    (goto-char (point-max))
+    (insert-string line)
+    (comint-send-input)))
 
-(defun j-execute-region (start end)
+(defun-wp j-execute-region (interpreter) (start end)
   (interactive "r")
-  (w-p interpreter
-       (and (= start end) (error "Region is empty"))
-       (let* ((region (buffer-substring-no-properties start end))
-              (block-size (if (and (= start (point-min)) (= end (point-max)))
-                              "buffer" "region"))
-              (region (concat "\nNB. Sending " block-size "...\n" region)))
-         (pop-to-buffer (process-buffer interpreter))
-         (insert-string (concat "\n" region))
-         (dolist (line (split-string region "[\r\n]" nil))
-           (comint-send-string interpreter (concat line "\n"))))))
+  (and (= start end) (error "Region is empty"))
+  (let* ((region (buffer-substring-no-properties start end))
+         (block-size (if (and (= start (point-min)) (= end (point-max)))
+                         "buffer" "region"))
+         (region (concat "\nNB. Sending " block-size "...\n" region)))
+    (pop-to-buffer (process-buffer interpreter))
+    (insert-string (concat "\n" region "\n"))
+    (comint-send-input)))
 
 (defun j-execute-buffer ()
   (interactive)
   (j-execute-region (point-min) (point-max)))
-
-;;(add-hook 'comint-mode-hook
-;;          (lambda ()
-;;            (setq comint-process-echoes t)))
 
 ;;;###autoload
 (defun j-console ()
   (interactive)
   (switch-to-buffer-other-window (process-buffer (j-ensure-interpreter))))
 
-(provide 'j-mode)
+
+;;;###autoload
+(progn
+  (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode)))
+
+
+(provide 'j-mode '(j-console))
