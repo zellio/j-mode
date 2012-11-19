@@ -33,6 +33,9 @@
 
 ;;; Code:
 
+(require 'comint)
+
+
 (defconst j-mode-version "0.0.1"
   "`j-mode' version")
 
@@ -212,5 +215,75 @@
           . j-font-lock-syntactic-face-function)))
   (run-mode-hooks 'j-mode-hook))
 
+
+
+
+(defcustom j-command "jconsole"
+  ""
+  :type 'string
+  :group 'j-)
+
+(defcustom j-command-args '()
+  ""
+  :type 'string
+  :group 'j-)
+
+(defcustom j-command-conf nil
+  ""
+  :type 'string
+  :group 'j-)
+
+
+(defun j-create-interpreter ()
+  (apply 'make-comint "J" j-command j-command-conf j-command-args))
+
+(defun j-ensure-interpreter ()
+  (or (get-process "J")
+      (progn
+        (j-create-interpreter)
+        (get-process "J"))))
+
+
+;; with process
+(defmacro w-p ( binding &rest body )
+  `(let* ((,binding (j-ensure-interpreter)))
+     ,@body))
+
+
+(defun j-execute-line ()
+  (interactive)
+  (w-p interpreter
+       (let* ((line (buffer-substring-no-properties (point-at-bol)
+                                                    (point-at-eol))))
+         (pop-to-buffer (process-buffer interpreter))
+         (goto-char (point-max))
+         (insert-string line)
+         (comint-send-input))))
+
+(defun j-execute-region (start end)
+  (interactive "r")
+  (w-p interpreter
+       (and (= start end) (error "Region is empty"))
+       (let* ((region (buffer-substring-no-properties start end))
+              (block-size (if (and (= start (point-min)) (= end (point-max)))
+                              "buffer" "region"))
+              (region (concat "\nNB. Sending " block-size "...\n" region)))
+         (pop-to-buffer (process-buffer interpreter))
+         (insert-string (concat "\n" region))
+         (dolist (line (split-string region "[\r\n]" nil))
+           (comint-send-string interpreter (concat line "\n"))))))
+
+(defun j-execute-buffer ()
+  (interactive)
+  (j-execute-region (point-min) (point-max)))
+
+;;(add-hook 'comint-mode-hook
+;;          (lambda ()
+;;            (setq comint-process-echoes t)))
+
+;;;###autoload
+(defun j-console ()
+  (interactive)
+  (switch-to-buffer-other-window (process-buffer (j-ensure-interpreter))))
 
 (provide 'j-mode)
