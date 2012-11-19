@@ -184,7 +184,11 @@
 
 
 (defvar j-mode-font-lock-keywords
-  `((,(regexp-opt j-mode-foreign-conjunctions) . font-lock-warning-face)
+  `(
+    ("\\([_a-zA-Z0-9]+\\)\s*\\(=[.:]\\)"
+     (1 font-lock-variable-name-face) (2 j-other-face))
+
+    (,(regexp-opt j-mode-foreign-conjunctions) . font-lock-warning-face)
     (,(concat (regexp-opt j-mode-control-structures)
               "\\|\\(?:\\(?:for\\|goto\\|label\\)_[a-zA-Z]+\\.\\)")
      . font-lock-keyword-face)
