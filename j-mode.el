@@ -57,7 +57,7 @@
   :group 'j-)
 
 (defmacro build-faces ( &rest faces )
-  `(progn
+  `(eval-when-compile
      ,@(mapcan (lambda ( x )
                  (let* ((name (car x))
                         (body (cdr x)))
