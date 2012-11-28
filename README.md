@@ -9,10 +9,38 @@ Provides font-lock and basic REPL integration for the
 The only method of installation is to check out the project, add it
 to the load path, and load normally. This may change one day.
 
-    ;; Put this in your emacs config
-    (add-to-list 'load-path "/path/to/j-mode/")
-    (load "j-mode")
+```lisp
+;; Put this in your emacs config
+(add-to-list 'load-path "/path/to/j-mode/")
+(load "j-mode")
+```
 
+## font-lock Configuration
+
+j-mode relies on four newly introduced faces to help colour the various parts of
+speech. Those faces are `j-verb-face` `j-adverb-face` `j-conjunction-face`
+`j-other-face`. They can be changed like any other face to help bring them in
+line with what ever your display configuration is.
+
+```lisp
+(custom-set-face
+ '(j-verb-face ((t (:foreground "Red"))))
+ '(j-adverb-face ((t (:foreground "Green"))))
+ '(j-conjunction-face ((t (:foreground "Blue"))))
+ '(j-other-face ((t (:foreground "Black")))))
+```
+
+If you are not interested in coloring the various parts of speech you can also
+just set all of the faces to be the same.
+
+```lisp
+(let ((default-color "Black"))
+  (custom-set-face
+   '(j-verb-face ((t (:foreground default-color :background "Clear"))))
+   '(j-adverb-face ((t (:foreground default-color :background "Clear"))))
+   '(j-conjunction-face ((t (:foreground default-color :background "Clear"))))
+   '(j-other-face ((t (:foreground default-color :background "Clear"))))))
+```
 
 ## REPL Interaction
 

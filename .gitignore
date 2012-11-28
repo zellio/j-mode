@@ -1,0 +1,7 @@
+# temporary files
+*~
+*\#*\#
+*.\#*
+
+# j-help data cache
+.help_cache/
