@@ -44,9 +44,8 @@ just set all of the faces to be the same.
 
 ## REPL Interaction
 
-Interaction is rudimentary. <kbd>M-x j-console</kbd> or
-<kbd>C-c !</kbd> in `j-mode` will start a new jconsole process wrapped in a
-comint buffer.
+Interaction is rudimentary. <kbd>M-x j-console</kbd> or <kbd>C-c !</kbd> in
+`j-mode` will start a new jconsole process wrapped in a comint buffer.
 
 The following commands are provided as convenience methods
 

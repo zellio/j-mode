@@ -5,7 +5,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.0.5
+;; Version: 0.0.7
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
@@ -38,7 +38,7 @@
 (require 'comint)
 
 
-(defconst j-mode-version "0.0.5"
+(defconst j-mode-version "0.0.7"
   "`j-mode' version")
 
 (defgroup j-mode nil
