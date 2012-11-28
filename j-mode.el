@@ -5,7 +5,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.0.7
+;; Version: 0.0.8
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
@@ -38,7 +38,7 @@
 (require 'comint)
 
 
-(defconst j-mode-version "0.0.7"
+(defconst j-mode-version "0.0.8"
   "`j-mode' version")
 
 (defgroup j-mode nil
@@ -57,6 +57,9 @@
   :group 'j-)
 
 (defmacro build-faces ( &rest faces )
+  "Allows for easy defining of multiple faces in one command.
+
+ (BUILD-FACES (FACE-NAME FACE-RULES DOCS-STR &optional GROUP) ...)"
   `(eval-when-compile
      ,@(mapcan (lambda ( x )
                  (let* ((name (car x))
@@ -97,7 +100,7 @@
   "Keymap for J major mode")
 
 
-(defvar j-mode-menu nil "")
+(defvar j-mode-menu nil "Drop-down menu for j-mode interaction")
 (easy-menu-define j-mode-menu j-mode-map "J Mode menu"
   '("J"
     ["Start J Console" j-console t]
@@ -208,7 +211,10 @@
 
 
 (defun j-font-lock-syntactic-face-function (state)
-  (if (nth 3 state) font-lock-string-face ;; String Context
+  "Function for detection of string vs. Comment Note: J comments
+are three chars longs, there is no easy / evident way to handle
+this in emacs and it poses problems"
+  (if (nth 3 state) font-lock-string-face
     (let* ((start-pos (nth 8 state)))
       (and (<= (+ start-pos 3) (point-max))
            (eq (char-after start-pos) ?N)
@@ -242,28 +248,29 @@
 
 
 (defcustom j-cmd "jconsole"
-  ""
+  "Name of the executable used to start a J session."
   :type 'string
   :group 'j-)
 
 (defcustom j-cmd-args '()
-  ""
+  "Arguments to be passed to the j-cmd command on start."
   :type 'string
   :group 'j-)
 
-(defcustom j-cmd-conf nil
-  ""
+(defcustom j-cmd-init nil
+  "Full path to file who's contents are sent to the j-cmd on start."
   :type 'string
   :group 'j-)
 
 (defcustom j-cmd-buffer-name "J"
-  ""
+  "Name of the buffer which contains the j-cmd session."
   :type 'string
   :group 'j-)
 
 (defun j-create-interpreter ()
+  "Starts a comint session using the various j-cmd variables"
   (setq comint-process-echoes t)
-  (apply 'make-comint j-cmd-buffer-name j-cmd j-cmd-conf j-cmd-args)
+  (apply 'make-comint j-cmd-buffer-name j-cmd j-cmd-init j-cmd-args)
   (add-hook
    'comint-preoutput-filter-functions
    (lambda ( output )
@@ -272,18 +279,23 @@
        output))))
 
 (defun j-ensure-interpreter ()
+  "Checks for a running j-cmd comint session.
+Will start a new one if a session isn't found."
   (or (get-process j-cmd-buffer-name)
       (progn
         (j-create-interpreter)
         (get-process j-cmd-buffer-name))))
 
-(defmacro defun-wp ( name label args interactive &rest body )
+(defmacro defun-wp ( name label args docstring interactive &rest body )
+  "Simplifies working with `j-ensure-interpreter'"
   `(defun ,name ,args
+     ,docstring
      ,interactive
      (let* ((,@label (j-ensure-interpreter)))
        ,@body)))
 
 (defun-wp j-execute-line ( interpreter ) ()
+  "Sends current line to the j-cmd session and exectues it"
   (interactive)
   (let* ((line (buffer-substring-no-properties (point-at-bol)
                                                (point-at-eol))))
@@ -293,6 +305,7 @@
     (comint-send-input)))
 
 (defun-wp j-execute-region (interpreter) (start end)
+  "Sends current region to the j-cmd session and exectues it"
   (interactive "r")
   (and (= start end) (error "Region is empty"))
   (let* ((region (buffer-substring-no-properties start end))
@@ -304,11 +317,13 @@
     (comint-send-input)))
 
 (defun j-execute-buffer ()
+  "Sends current buffer to the j-cmd session and exectues it"
   (interactive)
   (j-execute-region (point-min) (point-max)))
 
 ;;;###autoload
 (defun j-console ()
+  "Ensures a running j-cmd session and switches focus to that buffer"
   (interactive)
   (switch-to-buffer-other-window (process-buffer (j-ensure-interpreter))))
 
