@@ -5,7 +5,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.0.8
+;; Version: 0.1.0
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
@@ -34,11 +34,11 @@
 
 ;;; Code:
 
+(require 'j-console)
+(require 'j-help)
+(require 'j-font-lock)
 
-(require 'comint)
-
-
-(defconst j-mode-version "0.0.8"
+(defconst j-mode-version "0.1.0"
   "`j-mode' version")
 
 (defgroup j-mode nil
@@ -49,179 +49,30 @@
 (defcustom j-mode-hook nil
   "Hook called by `j-mode'."
   :type 'hook
-  :group 'j-)
-
-
-(defgroup j-faces nil
-  "Faces for j-mode font-lock"
-  :group 'j-)
-
-(defmacro build-faces ( &rest faces )
-  "Allows for easy defining of multiple faces in one command.
-
- (BUILD-FACES (FACE-NAME FACE-RULES DOCS-STR &optional GROUP) ...)"
-  `(eval-when-compile
-     ,@(mapcan (lambda ( x )
-                 (let* ((name (car x))
-                        (body (cdr x)))
-                   `((defvar ,name ',name)
-                     (defface ,name ,@body))))
-               faces)))
-
-(build-faces
- (j-verb-face
-  `((t (:foreground "Red")))
-  "Font Lock mode face used to higlight vrebs"
-  :group 'j-faces)
-
- (j-adverb-face
-  `((t (:foreground "Green")))
-  "Font Lock mode face used to higlight adverbs"
-  :group 'j-faces)
-
- (j-conjunction-face
-  `((t (:foreground "Blue")))
-  "Font Lock mode face used to higlight conjunctions"
-  :group 'j-faces)
-
- (j-other-face
-  `((t (:foreground "Black")))
-  "Font Lock mode face used to higlight others"
-  :group 'j-faces))
-
+  :group 'j)
 
 (defvar j-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c !") 'j-console)
-    (define-key map (kbd "C-c C-c") 'j-execute-buffer)
-    (define-key map (kbd "C-c C-r") 'j-execute-region)
-    (define-key map (kbd "C-c C-l") 'j-execute-line)
+    (define-key map (kbd "C-c !")   'j-console)
+    (define-key map (kbd "C-c C-c") 'j-console-execute-buffer)
+    (define-key map (kbd "C-c C-r") 'j-console-execute-region)
+    (define-key map (kbd "C-c C-l") 'j-console-execute-line)
+    (define-key map (kbd "C-c h")   'j-help-lookup-symbol)
+    (define-key map (kbd "C-c C-h") 'j-help-lookup-symbol-at-point)
     map)
   "Keymap for J major mode")
-
 
 (defvar j-mode-menu nil "Drop-down menu for j-mode interaction")
 (easy-menu-define j-mode-menu j-mode-map "J Mode menu"
   '("J"
     ["Start J Console" j-console t]
-    ["Execute Buffer" j-execute-buffer]
-    ["Execute Region" j-execute-region]
-    ["Execute Line" j-execute-line]
+    ["Execute Buffer" j-execute-buffer t]
+    ["Execute Region" j-execute-region t]
+    ["Execute Line" j-execute-line t]
     "---"
-    ["Help on J-mode" describe-mode t]
-    "---"
-    ("Sub-Menu")))
-
-
-(defvar j-mode-syntax-table
-  (let ((table (make-syntax-table)))
-    (modify-syntax-entry ?\{ "."  table)
-    (modify-syntax-entry ?\} "."  table)
-    (modify-syntax-entry ?\[ "."  table)
-    (modify-syntax-entry ?\] "."  table)
-    (modify-syntax-entry ?\" "."  table)
-    (modify-syntax-entry ?\\ "."  table)
-    (modify-syntax-entry ?\. "w"  table)
-    (modify-syntax-entry ?\: "w"  table)
-    (modify-syntax-entry ?\( "()"  table)
-    (modify-syntax-entry ?\) ")("  table)
-    (modify-syntax-entry ?\' "\"" table)
-    (modify-syntax-entry ?\N "w 1" table)
-    (modify-syntax-entry ?\B "w 2" table)
-    (modify-syntax-entry ?\n ">" table)
-    (modify-syntax-entry ?\r ">" table)
-    table)
-  "Syntax table for j-mode")
-
-
-(defvar j-mode-constants '())
-
-(defvar j-mode-control-structures
-  '("assert."  "break."  "continue."  "while."  "whilst."  "for."  "do."  "end."
-    "if."  "else."  "elseif."  "return."  "select."  "case."  "fcase."  "throw."
-    "try."  "catch."  "catchd."  "catcht."  "end."
-    ;; "for_[a-zA-Z]+\\."  "goto_[a-zA-Z]+\\."  "label_[a-zA-Z]+\\."
-    ))
-
-(defvar j-mode-foreign-conjunctions
-  '("0!:" "1!:" "2!:" "3!:" "4!:" "5!:" "6!:" "7!:" "8!:" "9!:" "11!:" "13!:"
-    "15!:" "18!:" "128!:" ))
-
-(defvar j-mode-len-3-verbs
-  '("_9:" "p.." "{::"))
-(defvar j-mode-len-2-verbs
-  '("x:" "u:" "s:" "r." "q:" "p:" "p." "o." "L." "j." "I." "i:" "i." "E." "e."
-    "C." "A." "?." "\":" "\"." "}:" "}." "{:" "{." "[:" "/:" "#:" "#." ";:" ",:"
-    ",." "|:" "|." "~:" "~." "$:" "$." "^." "%:" "%." "-:" "-." "*:" "*."  "+:"
-    "+." "_:" ">:" ">." "<:" "<."))
-(defvar j-mode-len-1-verbs
-  '("?" "{" "]" "[" ":" "!" "#" ";" "," "|" "$" "^" "%" "-" "*" "+" ">" "<" "="))
-(defvar j-mode-verbs
-  (append j-mode-len-3-verbs j-mode-len-2-verbs j-mode-len-1-verbs))
-
-(defvar j-mode-len-2-adverbs
-  '("t:" "t." "M." "f." "b." "/."))
-(defvar j-mode-len-1-adverbs
-  '("}" "." "\\" "/" "~"))
-(defvar j-mode-adverbs
-  (append j-mode-len-2-adverbs j-mode-len-1-adverbs))
-
-(defvar j-mode-len-3-others
-  '("NB."))
-(defvar j-mode-len-2-others
-  '("=." "=:" "_." "a." "a:"))
-(defvar j-mode-len-1-others
-  '("_" ))
-(defvar j-mode-others
-  (append j-mode-len-3-others j-mode-len-2-others j-mode-len-1-others))
-
-(defvar j-mode-len-3-conjunctions
-  '("&.:"))
-(defvar j-mode-len-2-conjunctions
-  '("T." "S:" "L:" "H." "D:" "D." "d." "&:" "&." "@:" "@." "`:" "!:" "!." ";."
-    "::" ":." ".:" ".." "^:"))
-(defvar j-mode-len-1-conjunctions
-  '("&" "@" "`" "\"" ":" "."))
-(defvar j-mode-conjunctions
-  (append j-mode-len-3-conjunctions j-mode-len-2-conjunctions j-mode-len-1-conjunctions))
-
-
-(defvar j-mode-font-lock-keywords
-  `(
-    ("\\([_a-zA-Z0-9]+\\)\s*\\(=[.:]\\)"
-     (1 font-lock-variable-name-face) (2 j-other-face))
-
-    (,(regexp-opt j-mode-foreign-conjunctions) . font-lock-warning-face)
-    (,(concat (regexp-opt j-mode-control-structures)
-              "\\|\\(?:\\(?:for\\|goto\\|label\\)_[a-zA-Z]+\\.\\)")
-     . font-lock-keyword-face)
-    (,(regexp-opt j-mode-constants) . font-lock-constant-face)
-    (,(regexp-opt j-mode-len-3-verbs) . j-verb-face)
-    (,(regexp-opt j-mode-len-3-conjunctions) . j-conjunction-face)
-    ;;(,(regexp-opt j-mode-len-3-others) . )
-    (,(regexp-opt j-mode-len-2-verbs) . j-verb-face)
-    (,(regexp-opt j-mode-len-2-adverbs) . j-adverb-face)
-    (,(regexp-opt j-mode-len-2-conjunctions) . j-conjunction-face)
-    ;;(,(regexp-opt j-mode-len-2-others) . )
-    (,(regexp-opt j-mode-len-1-verbs) . j-verb-face)
-    (,(regexp-opt j-mode-len-1-adverbs) . j-adverb-face)
-    (,(regexp-opt j-mode-len-1-conjunctions) . j-conjunction-face)
-    ;;(,(regexp-opt j-mode-len-1-other) . )
-    ) "J Mode font lock keys words")
-
-
-(defun j-font-lock-syntactic-face-function (state)
-  "Function for detection of string vs. Comment Note: J comments
-are three chars longs, there is no easy / evident way to handle
-this in emacs and it poses problems"
-  (if (nth 3 state) font-lock-string-face
-    (let* ((start-pos (nth 8 state)))
-      (and (<= (+ start-pos 3) (point-max))
-           (eq (char-after start-pos) ?N)
-           (string= (buffer-substring-no-properties
-                     start-pos (+ start-pos 3)) "NB.")
-           font-lock-comment-face))))
-
+    ["J Symbol Look-up" j-help-lookup-symbol t]
+    ["J Symbol Dynamic Look-up" j-help-lookup-symbol-at-point t]
+    ["Help on J-mode" describe-mode t]))
 
 ;;;###autoload
 (defun j-mode ()
@@ -231,7 +82,7 @@ this in emacs and it poses problems"
   (use-local-map j-mode-map)
   (setq mode-name "J"
         major-mode 'j-mode)
-  (set-syntax-table j-mode-syntax-table)
+  (set-syntax-table j-font-lock-syntax-table)
   (set (make-local-variable 'comment-start)
        "NB.")
   (set (make-local-variable 'comment-start-skip)
@@ -239,98 +90,15 @@ this in emacs and it poses problems"
   (set (make-local-variable 'font-lock-comment-start-skip)
        "NB. *")
   (set (make-local-variable 'font-lock-defaults)
-       '(j-mode-font-lock-keywords
+       '(j-font-lock-keywords
          nil nil nil nil
-;;         (font-lock-mark-block-function . mark-defun)
+         ;;(font-lock-mark-block-function . mark-defun)
          (font-lock-syntactic-face-function
           . j-font-lock-syntactic-face-function)))
   (run-mode-hooks 'j-mode-hook))
-
-
-(defcustom j-cmd "jconsole"
-  "Name of the executable used to start a J session."
-  :type 'string
-  :group 'j-)
-
-(defcustom j-cmd-args '()
-  "Arguments to be passed to the j-cmd command on start."
-  :type 'string
-  :group 'j-)
-
-(defcustom j-cmd-init nil
-  "Full path to file who's contents are sent to the j-cmd on start."
-  :type 'string
-  :group 'j-)
-
-(defcustom j-cmd-buffer-name "J"
-  "Name of the buffer which contains the j-cmd session."
-  :type 'string
-  :group 'j-)
-
-(defun j-create-interpreter ()
-  "Starts a comint session using the various j-cmd variables"
-  (setq comint-process-echoes t)
-  (apply 'make-comint j-cmd-buffer-name j-cmd j-cmd-init j-cmd-args)
-  (add-hook
-   'comint-preoutput-filter-functions
-   (lambda ( output )
-     (if (string-match "^[ \r\n\t]+" output)
-         (concat "  " (replace-match "" nil t output))
-       output))))
-
-(defun j-ensure-interpreter ()
-  "Checks for a running j-cmd comint session.
-Will start a new one if a session isn't found."
-  (or (get-process j-cmd-buffer-name)
-      (progn
-        (j-create-interpreter)
-        (get-process j-cmd-buffer-name))))
-
-(defmacro defun-wp ( name label args docstring interactive &rest body )
-  "Simplifies working with `j-ensure-interpreter'"
-  `(defun ,name ,args
-     ,docstring
-     ,interactive
-     (let* ((,@label (j-ensure-interpreter)))
-       ,@body)))
-
-(defun-wp j-execute-line ( interpreter ) ()
-  "Sends current line to the j-cmd session and exectues it"
-  (interactive)
-  (let* ((line (buffer-substring-no-properties (point-at-bol)
-                                               (point-at-eol))))
-    (pop-to-buffer (process-buffer interpreter))
-    (goto-char (point-max))
-    (insert-string line)
-    (comint-send-input)))
-
-(defun-wp j-execute-region (interpreter) (start end)
-  "Sends current region to the j-cmd session and exectues it"
-  (interactive "r")
-  (and (= start end) (error "Region is empty"))
-  (let* ((region (buffer-substring-no-properties start end))
-         (block-size (if (and (= start (point-min)) (= end (point-max)))
-                         "buffer" "region"))
-         (region (concat "\nNB. Sending " block-size "...\n" region)))
-    (pop-to-buffer (process-buffer interpreter))
-    (insert-string (concat "\n" region "\n"))
-    (comint-send-input)))
-
-(defun j-execute-buffer ()
-  "Sends current buffer to the j-cmd session and exectues it"
-  (interactive)
-  (j-execute-region (point-min) (point-max)))
-
-;;;###autoload
-(defun j-console ()
-  "Ensures a running j-cmd session and switches focus to that buffer"
-  (interactive)
-  (switch-to-buffer-other-window (process-buffer (j-ensure-interpreter))))
-
 
 ;;;###autoload
 (progn
   (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode)))
 
-
-(provide 'j-mode '(j-console))
+(provide 'j-mode)

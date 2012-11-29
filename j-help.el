@@ -1,5 +1,5 @@
 
-;;; j-help.el --- Help extension for j-mode.el
+;;; j-help.el --- Documentation extention for j-mode
 
 ;; Copyright (C) 2012 Zachary Elliott
 ;;
@@ -11,9 +11,6 @@
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
-
-;; Provides look up functions for the J software language documentation as
-;; provided by the VOC and other documentation on jsoftware.com
 
 ;; This is not complete
 
@@ -72,7 +69,7 @@ It groups the objects in LIST according to the predicate FN"
     (group-by* sl fn '() '() '())))
 
 (defgroup j-help nil
-  "Help documentation for j-mode"
+  "Documentation extention for j-mode"
   :group 'applications
   :prefix "j-help-")
 
@@ -190,3 +187,5 @@ It groups the objects in LIST according to the predicate FN"
   (if-let ((symbol (j-help-determine-symbol-at-point point)))
       (j-help-lookup-symbol symbol)
     (error "No symbol could be determined for point %d" point)))
+
+(provide 'j-help)
