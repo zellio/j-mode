@@ -1,26 +1,26 @@
 
 # J Mode
 
-Provides font-lock and basic REPL integration for the
-[J programming language](http://www.jsoftware.com)
+Provides font-lock, REPL integration ( via comint ) and a basic help
+documentation for the [J programming language](http://www.jsoftware.com).
 
 ## Installation
 
-The only method of installation is to check out the project, add it
-to the load path, and load normally. This may change one day.
+Currently the method of installation is entirely manually. Fetch the source via
+git or direct download, place in your load path and load / require normally.
 
 ```lisp
-;; Put this in your emacs config
+;; Add this to your emacs config
 (add-to-list 'load-path "/path/to/j-mode/")
-(load "j-mode")
+(autoload 'j-mode "j-mode.el" "Major mode for editing J files" t)
 ```
 
-## font-lock Configuration
+## J Font Lock
 
-j-mode relies on four newly introduced faces to help colour the various parts of
-speech. Those faces are `j-verb-face` `j-adverb-face` `j-conjunction-face`
-`j-other-face`. They can be changed like any other face to help bring them in
-line with what ever your display configuration is.
+`j-mode` font-lock provides four new faces for management of the coloring
+various parts of speech. Those faces are `j-verb-face` `j-adverb-face`
+`j-conjunction-face` `j-other-face`. They can be modified like any of the
+standard built in faces to help meet your need.
 
 ```lisp
 (custom-set-face
@@ -30,34 +30,36 @@ line with what ever your display configuration is.
  '(j-other-face ((t (:foreground "Black")))))
 ```
 
-If you are not interested in coloring the various parts of speech you can also
-just set all of the faces to be the same.
+## J Console
 
-```lisp
-(let ((default-color "Black"))
-  (custom-set-face
-   '(j-verb-face ((t (:foreground default-color :background "Clear"))))
-   '(j-adverb-face ((t (:foreground default-color :background "Clear"))))
-   '(j-conjunction-face ((t (:foreground default-color :background "Clear"))))
-   '(j-other-face ((t (:foreground default-color :background "Clear"))))))
-```
+Interaction to the j REPL is provided via the comint module. The `j-console`
+function starts the REPL session in a new buffer.
 
-## REPL Interaction
+The module provides the following key bindings for convenience
 
-Interaction is rudimentary. <kbd>M-x j-console</kbd> or <kbd>C-c !</kbd> in
-`j-mode` will start a new jconsole process wrapped in a comint buffer.
+* <kbd>C-c !</kbd> Runs the `j-console` function
+* <kbd>C-c C-l</kbd> Executes the current line
+* <kbd>C-c C-r</kbd> Executes the current region
+* <kbd>C-c C-c</kbd> Executes the current buffer
 
-The following commands are provided as convenience methods
+## J Help
 
-- <kbd>C-c C-l</kbd> Executes the current line
-- <kbd>C-c C-r</kbd> Executes the current region
-- <kbd>C-c C-c</kbd> Executes the current buffer
+`j-help` provides access to the
+[J software vocabulary](http://www.jsoftware.com/help/dictionary/vocabul.htm)
+via two functions `j-help-lookup-symbol` and
+`j-help-lookup-symbol-at-point`. `j-help-look-symbol` takes one string argument
+( generally via the mini-buffer ) which it then looks up.
+`j-help-lookup-symbol-at-point` attempts to determine which symbol is under your
+cursor and then passes that to `j-help-lookup-symbol-at-point`.
 
-All of them will start a jconsole session if there isn't one already running.
+The module provides the following key bindings for convenience
 
+* <kbd>C-c h</kbd> runs `j-help-lookup-symbol`
+* <kbd>C-c C-h</kbd> `j-help-lookup-symbol-at-point`
 
-## License
+### License
 
 Copyright (C) 2012 Zachary Elliott
 
-Distributed under the GNU General Public License; see <kbd>C-h t</kbd> in emacs to view.
+Distributed under the GNU General Public License; see <kbd>C-h t</kbd> in emacs
+to view.

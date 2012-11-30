@@ -42,7 +42,6 @@
   :group 'j
   :prefix "j-font-lock-")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defgroup j-faces nil
   "Faces for j-mode font-lock"
   :group 'j-)
@@ -79,7 +78,6 @@
   `((t (:foreground "Black")))
   "Font Lock mode face used to higlight others"
   :group 'j-faces))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar j-font-lock-syntax-table
   (let ((table (make-syntax-table)))
@@ -191,33 +189,3 @@ this in emacs and it poses problems"
            font-lock-comment-face))))
 
 (provide 'j-font-lock)
-
-;;;;;###autoload
-;;(defun j-mode ()
-;;  "Major mode for editing J code"
-;;  (interactive)
-;;  (kill-all-local-variables)
-;;  (use-local-map j-mode-map)
-;;  (setq mode-name "J"
-;;        major-mode 'j-mode)
-;;  (set-syntax-table j-mode-syntax-table)
-;;  (set (make-local-variable 'comment-start)
-;;       "NB.")
-;;  (set (make-local-variable 'comment-start-skip)
-;;       "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)NB. *")
-;;  (set (make-local-variable 'font-lock-comment-start-skip)
-;;       "NB. *")
-;;  (set (make-local-variable 'font-lock-defaults)
-;;       '(j-mode-font-lock-keywords
-;;         nil nil nil nil
-;;;;         (font-lock-mark-block-function . mark-defun)
-;;         (font-lock-syntactic-face-function
-;;          . j-font-lock-syntactic-face-function)))
-;;  (run-mode-hooks 'j-mode-hook))
-;;
-;;;;;###autoload
-;;(progn
-;;  (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode)))
-;;
-;;(provide 'j-mode '(j-console))
-;;

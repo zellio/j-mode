@@ -12,7 +12,7 @@
 
 ;;; Commentary:
 
-;; This is not complete
+;;
 
 ;;; License:
 

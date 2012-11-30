@@ -12,8 +12,7 @@
 
 ;;; Commentary:
 
-;; Provides font-lock and basic REPL integration for the J programming language
-;; (http://www.jsoftware.com)
+;;
 
 ;;; License:
 
@@ -34,9 +33,10 @@
 
 ;;; Code:
 
+(require 'j-font-lock)
 (require 'j-console)
 (require 'j-help)
-(require 'j-font-lock)
+
 
 (defconst j-mode-version "0.1.0"
   "`j-mode' version")
