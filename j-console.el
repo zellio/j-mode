@@ -58,7 +58,9 @@
 
 (defcustom j-console-cmd-init-file nil
   "Full path to the file who's contents are sent to the
-  j-console-cmd on start"
+  j-console-cmd on start
+
+Should be NIL if there is no file not the empty string"
   :type 'string
   :group 'j-console)
 
@@ -68,13 +70,13 @@
   :group 'j-console)
 
 (defvar j-console-comint-input-filter-function nil
-  "")
+  "J mode specific mask for comint input filter function")
 
 (defvar j-console-comint-output-filter-function nil
-  "")
+  "J mode specific mask for comint output filter function")
 
 (defvar j-console-comint-preoutput-filter-function nil
-  "")
+  "J mode specific mask for comint preoutput filter function")
 
 ;; 'comint-preoutput-filter-functions
 ;; (lambda ( output )
@@ -83,7 +85,7 @@
 ;;     output))))
 
 (defun j-console-create-session ()
-  "Starts a comint session"
+  "Starts a comint session wrapped around the j-console-cmd"
   (setq comint-process-echoes t)
   (apply 'make-comint j-console-cmd-buffer-name
          j-console-cmd j-console-cmd-init-file j-console-cmd-args)
@@ -109,7 +111,7 @@
 
 ;;;###autoload
 (defun j-console ()
-  "Ensure a running j-console-cmd session and switches focus to
+  "Ensures a running j-console-cmd session and switches focus to
 the containing buffer"
   (interactive)
   (switch-to-buffer-other-window (process-buffer (j-console-ensure-session))))

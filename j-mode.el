@@ -5,7 +5,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.1.0
+;; Version: 0.1.1
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
@@ -38,7 +38,7 @@
 (require 'j-help)
 
 
-(defconst j-mode-version "0.1.0"
+(defconst j-mode-version "0.1.1"
   "`j-mode' version")
 
 (defgroup j-mode nil
@@ -47,7 +47,7 @@
   :prefix "j-")
 
 (defcustom j-mode-hook nil
-  "Hook called by `j-mode'."
+  "Hook called by `j-mode'"
   :type 'hook
   :group 'j)
 
@@ -76,7 +76,7 @@
 
 ;;;###autoload
 (defun j-mode ()
-  "Major mode for editing J code"
+  "Major mode for editing J"
   (interactive)
   (kill-all-local-variables)
   (use-local-map j-mode-map)
@@ -99,6 +99,7 @@
 
 ;;;###autoload
 (progn
+  ;; adding j files to the auot-mode-alist
   (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode)))
 
 (provide 'j-mode)

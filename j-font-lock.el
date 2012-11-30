@@ -42,9 +42,11 @@
   :group 'j
   :prefix "j-font-lock-")
 
+
 (defgroup j-faces nil
-  "Faces for j-mode font-lock"
-  :group 'j-)
+  "Faces for j-font-lock"
+  :group 'j
+  :group 'j-font-lock)
 
 (defmacro build-faces ( &rest faces )
   "Allows for easy defining of multiple faces in one command.
