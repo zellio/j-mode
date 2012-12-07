@@ -1,4 +1,3 @@
-
 # J Mode
 
 Provides font-lock, REPL integration ( via comint ) and a basic help
@@ -13,6 +12,9 @@ git or direct download, place in your load path and load / require normally.
 ;; Add this to your emacs config
 (add-to-list 'load-path "/path/to/j-mode/")
 (autoload 'j-mode "j-mode.el" "Major mode for editing J files" t)
+
+;; Add for detection of j source files if the auto-load fails
+(add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode)))
 ```
 
 ## J Font Lock
