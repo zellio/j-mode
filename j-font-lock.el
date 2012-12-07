@@ -5,14 +5,23 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.0.1
+;; Version: 1.0.0
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
+;; `j-mode` font-lock provides four new faces for management of the coloring
+;; various parts of speech. Those faces are `j-verb-face` `j-adverb-face`
+;; `j-conjunction-face` `j-other-face`. They can be modified like any of the
+;; standard built in faces to help meet your need.
 ;;
+;; (custom-set-face
+;;  '(j-verb-face ((t (:foreground "Red"))))
+;;  '(j-adverb-face ((t (:foreground "Green"))))
+;;  '(j-conjunction-face ((t (:foreground "Blue"))))
+;;  '(j-other-face ((t (:foreground "Black")))))
 
 ;;; License:
 
@@ -34,8 +43,8 @@
 ;;; Code:
 
 
-(defconst j-font-lock-version "0.0.1"
-  "`j-font-lock' version")
+;; (defconst j-font-lock-version "1.0.0"
+;;   "`j-font-lock' version")
 
 (defgroup j-font-lock nil
   "font-lock extension for j-mode"

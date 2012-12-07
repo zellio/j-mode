@@ -50,7 +50,7 @@ via two functions `j-help-lookup-symbol` and
 `j-help-lookup-symbol-at-point`. `j-help-look-symbol` takes one string argument
 ( generally via the mini-buffer ) which it then looks up.
 `j-help-lookup-symbol-at-point` attempts to determine which symbol is under your
-cursor and then passes that to `j-help-lookup-symbol-at-point`.
+cursor and then passes that to `j-help-lookup-symbol`.
 
 The module provides the following key bindings for convenience
 

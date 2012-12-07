@@ -5,7 +5,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.0.1
+;; Version: 1.0.0
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
@@ -37,8 +37,8 @@
 (require 'comint)
 
 
-(defconst j-console-version "0.0.1"
-  "`j-console' version")
+;; (defconst j-console-version "0.0.1"
+;;   "`j-console' version")
 
 (defgroup j-console nil
   "REPL integration extention for `j-mode'"
@@ -139,3 +139,5 @@ the containing buffer"
   (j-console-execute-region (point-min) (point-max)))
 
 (provide 'j-console)
+
+;;; j-console.el ends here

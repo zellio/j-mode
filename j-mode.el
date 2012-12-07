@@ -5,14 +5,27 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.1.1
+;; Version: 1.0.0
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
+;; Provides font-lock and basic REPL integration for the
+;; [J programming language](http://www.jsoftware.com)
+
+;;; Installation
+
+;; The only method of installation is to check out the project, add it to the
+;; load path, and load normally. This may change one day.
 ;;
+;; Put this in your emacs config
+;;   (add-to-list 'load-path "/path/to/j-mode/")
+;;   (load "j-mode")
+;;
+;; Add for detection of j source files if the auto-load fails
+;;   (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode)))
 
 ;;; License:
 
@@ -38,7 +51,7 @@
 (require 'j-help)
 
 
-(defconst j-mode-version "0.1.1"
+(defconst j-mode-version "1.0.0"
   "`j-mode' version")
 
 (defgroup j-mode nil
@@ -97,9 +110,10 @@
           . j-font-lock-syntactic-face-function)))
   (run-mode-hooks 'j-mode-hook))
 
+
 ;;;###autoload
-(progn
-  ;; adding j files to the auot-mode-alist
-  (add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode)))
+(add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode))
 
 (provide 'j-mode)
+
+;;; j-mode.el ends here
