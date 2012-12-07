@@ -5,14 +5,23 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 0.0.1
+;; Version: 1.0.0
 ;; Keywords: J, Languages
 
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
+;; j-help provides access to the J software vocabulary via two functions
+;; j-help-lookup-symbol and j-help-lookup-symbol-at-point. j-help-look-symbol
+;; takes one string argument ( generally via the mini-buffer ) which it then
+;; looks up.  j-help-lookup-symbol-at-point attempts to determine which symbol
+;; is under your cursor and then passes that to j-help-lookup-symbol.
 ;;
+;; The module provides the following key bindings for convenience
+;;
+;; * <kbd>C-c h</kbd> runs j-help-lookup-symbol
+;; * <kbd>C-c C-h</kbd> j-help-lookup-symbol-at-point
 
 ;;; License:
 
@@ -137,31 +146,37 @@ It groups the objects in LIST according to the predicate FN"
          ((not (string= "" j-help-remote-dictionary-url))
           j-help-remote-dictionary-url))))
 
-(defun j-help-symbol-to-doc-url ( j-symbol )
-  "Convert J-SYMBOL into localtion URL"
-  (let ((alist-data (assoc j-symbol j-help-voc-alist))
-        (dic (j-help-valid-dictionary)))
+(defun j-help-symbol-pair-to-doc-url ( alist-data )
+  ""
+  (let ((dic (j-help-valid-dictionary)))
     (if (or (not alist-data) (string= dic ""))
         (error "%s" "No dictionary found. Please specify a dictionary.")
       (let ((name (car alist-data))
             (doc-name (cdr alist-data)))
-      (format "%s/%s.%s" dic doc-name "htm")))))
+        (format "%s/%s.%s" dic doc-name "htm")))))
+
+(defun j-help-symbol-to-doc-url ( j-symbol )
+  "Convert J-SYMBOL into localtion URL"
+  (j-help-symbol-pair-to-doc-url (assoc j-symbol j-help-voc-alist)))
 
 (defun j-help-determine-symbol ( s point )
-  "Internal function to determine j symbols. Should not be called directly"
-  (let* ((l (length s)))
-    (if (or (< point 0) (< l point)) '()
-      (some
-       (lambda (x)
-         (let* ((check-size (car x)))
-           (if (<= (+ check-size point) l)
-               (when (string-match (cadr x) (substring s point (+ point check-size)))
-                 (let* ((m (match-data))
-                        (ss (substring s (+ point (car m)) (+ point (cadr m)))))
-                   (assoc ss (caddr x)))))))
-       j-help-dictionary-data-block))))
+  "Internal function to determine j symbols. Should not be called directly
+
+string * int -> (string * string) list"
+  (unless (or (< point 0) (< (length s) point))
+    (some
+     (lambda (x)
+       (let* ((check-size (car x)))
+         (if (and
+              (<= (+ check-size point) (length s))
+              (string-match (cadr x) (substring s point (+ point check-size))))
+           (let* ((m (match-data))
+                  (ss (substring s (+ point (car m)) (+ point (cadr m)))))
+             (assoc ss (caddr x))))))
+     j-help-dictionary-data-block)))
 
 (defun j-help-determine-symbol-at-point ( point )
+  "int -> (string * string) list"
   (save-excursion
     (goto-char point)
     (let* ((bol (point-at-bol))
@@ -169,8 +184,26 @@ It groups the objects in LIST according to the predicate FN"
            (s (buffer-substring-no-properties bol eol)))
       (j-help-determine-symbol s (- point bol)))))
 
-;;(defun j-help-branch-determine-symbol-at-point ( point )
-;;  )
+(defun j-help-branch-determine-symbol-at-point*
+  ( string current-index target-index resolved-symbol )
+  ""
+  (if (> current-index target-index) resolved-symbol
+    (let ((next-symbol (j-help-determine-symbol string current-index)))
+      (check-and-jump
+       string
+       (+ current-index (length (or (car next-symbol) " ")))
+       target-index
+       next-symbol))))
+
+(defun j-help-branch-determine-symbol-at-point ( point )
+  ""
+  (save-excursion
+    (goto-char point)
+    (j-help-branch-determine-symbol-at-point*
+     (buffer-substring-no-properties (point-at-bol) (point-at-eol))
+     (- (max (- point j-help-symbol-search-branch-limit) (point-at-bol)) (point-at-bol))
+     (- point (point-at-bol))
+     nil)))
 
 ;;;###autoload
 (defun j-help-lookup-symbol ( symbol )
@@ -184,8 +217,12 @@ It groups the objects in LIST according to the predicate FN"
 (defun j-help-lookup-symbol-at-point ( point )
   "Determine the symbol nearest to POINT and look it up in the dictionary"
   (interactive "d")
-  (if-let ((symbol (j-help-determine-symbol-at-point point)))
-      (j-help-lookup-symbol symbol)
-    (error "No symbol could be determined for point %d" point)))
+  (let ((symbol (j-help-branch-determine-symbol-at-point point)))
+    (if symbol
+        (j-help-lookup-symbol (car symbol))
+      (error "No symbol could be determined for point %d" point))))
+
 
 (provide 'j-help)
+
+;;; j-help.el ends here
