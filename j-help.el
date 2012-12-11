@@ -44,10 +44,6 @@
 
 ;;(set 'lexical-binding t)
 
-(defmacro -> ( &rest body )
-  "Alias for the funcall method"
-  `(funcall ,@body))
-
 (defmacro if-let ( binding then &optional else )
   "Bind value according to BINDING and check for truthy-ness
 If the test passes then eval THEN with the BINDING varlist bound
@@ -66,7 +62,7 @@ If no, eval ELSE with no binding"
   (if list
       (let* ((head (car list))
              (tail (cdr list)))
-        (if (eq (-> fn head) (-> fn prev))
+        (if (eq (funcall fn head) (funcall fn prev))
             (group-by* tail fn head (cons head coll) agr)
           (group-by* tail fn head '() (cons coll agr))))
     (cons coll agr)))
@@ -74,7 +70,7 @@ If no, eval ELSE with no binding"
 (defun group-by ( list fn )
   "Group-by is a FUNCTION across LIST, returning a sequence
 It groups the objects in LIST according to the predicate FN"
-  (let ((sl (sort list (lambda (x y) (< (-> fn x) (-> fn y))))))
+  (let ((sl (sort list (lambda (x y) (< (funcall fn x) (funcall fn y))))))
     (group-by* sl fn '() '() '())))
 
 (defgroup j-help nil
