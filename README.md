@@ -5,8 +5,11 @@ documentation for the [J programming language](http://www.jsoftware.com).
 
 ## Installation
 
-Currently the method of installation is entirely manually. Fetch the source via
-git or direct download, place in your load path and load / require normally.
+`j-mode` has been added to the el-get package managment system and can now
+be installed via the `el-get-install` function.
+
+To install the project manually fetch the source via git or direct download, 
+place in your load path and load / require normally.
 
 ```lisp
 ;; Add this to your emacs config
