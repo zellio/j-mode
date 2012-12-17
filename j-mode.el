@@ -46,6 +46,9 @@
 
 ;;; Code:
 
+;; Required eval depth for older systems
+(setq max-lisp-eval-depth (max 500 max-lisp-eval-depth))
+
 (require 'j-font-lock)
 (require 'j-console)
 (require 'j-help)
