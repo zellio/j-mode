@@ -128,7 +128,7 @@ It groups the objects in LIST according to the predicate FN"
 (defconst j-help-dictionary-data-block
   (mapcar
    (lambda (l) (list (length (caar l))
-                     (regexp-opt (map 'list 'car l))
+                     (regexp-opt (mapcar 'car l))
                      l))
    (delq nil (group-by j-help-voc-alist (lambda (x) (length (car x))))))
   "(int * string * (string * string) alist) list")
