@@ -185,7 +185,7 @@ string * int -> (string * string) list"
   ""
   (if (> current-index target-index) resolved-symbol
     (let ((next-symbol (j-help-determine-symbol string current-index)))
-      (check-and-jump
+      (j-help-branch-determine-symbol-at-point*
        string
        (+ current-index (length (or (car next-symbol) " ")))
        target-index
