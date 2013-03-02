@@ -62,12 +62,12 @@
 
  (BUILD-FACES (FACE-NAME FACE-RULES DOCS-STR &optional GROUP) ...)"
   `(eval-when-compile
-     ,@(mapcan (lambda ( x )
-                 (let* ((name (car x))
-                        (body (cdr x)))
-                   `((defvar ,name ',name)
-                     (defface ,name ,@body))))
-               faces)))
+     ,@(apply 'nconc (mapcar (lambda ( x )
+			       (let* ((name (car x))
+				      (body (cdr x)))
+				 `((defvar ,name ',name)
+				   (defface ,name ,@body))))
+			     faces))))
 
 (build-faces
  (j-verb-face
