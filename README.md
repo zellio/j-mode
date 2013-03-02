@@ -8,7 +8,7 @@ documentation for the [J programming language](http://www.jsoftware.com).
 `j-mode` has been added to the el-get package managment system and can now
 be installed via the `el-get-install` function.
 
-To install the project manually fetch the source via git or direct download, 
+To install the project manually fetch the source via git or direct download,
 place in your load path and load / require normally.
 
 ```lisp
@@ -46,6 +46,15 @@ The module provides the following key bindings for convenience
 * <kbd>C-c C-l</kbd> Executes the current line
 * <kbd>C-c C-r</kbd> Executes the current region
 * <kbd>C-c C-c</kbd> Executes the current buffer
+
+NB. Java on many Linux systems provides an executable which is sadly named
+`jconsole`. This means that there is a good chance `j-mode` will attempt to
+start the Java console up instead of the J console when beginning a new REPL
+session. The easiest fix for this, as I doubt that we can convince the Java
+packagers to rename their executable, is to set the `j-console-cmd` variable
+provided by `j-console.el`. This can be done either directly or via the
+`custom-set-variables` block.
+
 
 ## J Help
 
