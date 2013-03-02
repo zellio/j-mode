@@ -73,6 +73,16 @@ It groups the objects in LIST according to the predicate FN"
   (let ((sl (sort list (lambda (x y) (< (funcall fn x) (funcall fn y))))))
     (group-by* sl fn '() '() '())))
 
+(unless (fboundp 'some)
+  (defun some ( fn list )
+    (when list
+      (let ((val (funcall fn (car list))))
+	(if val val (some fn (cdr list)))))))
+
+(unless (fboundp 'caddr)
+  (defun caddr ( list )
+    (car (cdr (cdr list)))))
+
 (defgroup j-help nil
   "Documentation extention for j-mode"
   :group 'applications
