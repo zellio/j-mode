@@ -57,36 +57,27 @@
   :group 'j
   :group 'j-font-lock)
 
-(defmacro build-faces ( &rest faces )
-  "Allows for easy defining of multiple faces in one command.
-
- (BUILD-FACES (FACE-NAME FACE-RULES DOCS-STR &optional GROUP) ...)"
-  `(eval-when-compile
-     ,@(apply 'nconc (mapcar (lambda ( x )
-			       (let* ((name (car x))
-				      (body (cdr x)))
-				 `((defvar ,name ',name)
-				   (defface ,name ,@body))))
-			     faces))))
-
-(build-faces
- (j-verb-face
-  `((t (:foreground "Red")))
+(defvar j-verb-face
+  (defface j-verb-face
+    `((t (:foreground "Red")))
   "Font Lock mode face used to higlight vrebs"
-  :group 'j-faces)
+  :group 'j-faces))
 
- (j-adverb-face
-  `((t (:foreground "Green")))
+(defvar j-adverb-face
+  (defface j-adverb-face
+    `((t (:foreground "Green")))
   "Font Lock mode face used to higlight adverbs"
-  :group 'j-faces)
+  :group 'j-faces))
 
- (j-conjunction-face
-  `((t (:foreground "Blue")))
+(defvar j-conjunction-face
+  (defface j-conjunction-face
+    `((t (:foreground "Blue")))
   "Font Lock mode face used to higlight conjunctions"
-  :group 'j-faces)
+  :group 'j-faces))
 
- (j-other-face
-  `((t (:foreground "Black")))
+(defvar j-other-face
+  (defface j-other-face
+    `((t (:foreground "Black")))
   "Font Lock mode face used to higlight others"
   :group 'j-faces))
 
