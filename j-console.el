@@ -5,7 +5,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 1.0.0
+;; Version: 1.0.2
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
@@ -37,7 +37,7 @@
 (require 'comint)
 
 
-;; (defconst j-console-version "0.0.1"
+;; (defconst j-console-version "1.0.2"
 ;;   "`j-console' version")
 
 (defgroup j-console nil
