@@ -109,12 +109,16 @@ Should be NIL if there is no file not the empty string"
         (j-console-create-session)
         (get-process j-console-cmd-buffer-name))))
 
+(define-derived-mode inferior-j-mode comint-mode "Inferior J"
+  "Major mode for J inferior process.")
+
 ;;;###autoload
 (defun j-console ()
   "Ensures a running j-console-cmd session and switches focus to
 the containing buffer"
   (interactive)
-  (switch-to-buffer-other-window (process-buffer (j-console-ensure-session))))
+  (switch-to-buffer-other-window (process-buffer (j-console-ensure-session)))
+  (inferior-j-mode))
 
 (defun j-console-execute-region ( start end )
   "Sends current region to the j-console-cmd session and exectues it"

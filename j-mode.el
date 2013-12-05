@@ -100,7 +100,7 @@
         major-mode 'j-mode)
   (set-syntax-table j-font-lock-syntax-table)
   (set (make-local-variable 'comment-start)
-       "NB.")
+       "NB. ")
   (set (make-local-variable 'comment-start-skip)
        "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)NB. *")
   (set (make-local-variable 'font-lock-comment-start-skip)
