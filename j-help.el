@@ -131,7 +131,7 @@ It groups the objects in LIST according to the predicate FN"
     ("#:" . "d402") ("#." . "d401") ("S:" . "dscapco") ("M." . "dmcapdot")
     ("L:" . "dlcapco") ("L." . "dlcapdot") ("I." . "dicapdot") ("H." . "dhcapdot")
     ("E." . "decapdot") ("D:" . "ddcapco") ("D." . "ddcapdot") ("C." . "dccapdot")
-    ("A." . "dacapdot") ("@:" . "d622") ("!." . "d411") ("!:" . "d412") ("{::" . "d523")
+    ("A." . "dacapdot") ("@:" . "d622") ("!" . "d410") ("!." . "d411") ("!:" . "d412") ("{::" . "d523")
     ("p.." . "dpdotdot") ("_9:" . "dconsf") ("&.:" . "d631") ("NB." . "dnb"))
   "(string * string) alist")
 
