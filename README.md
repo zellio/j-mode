@@ -73,7 +73,7 @@ The module provides the following key bindings for convenience
 
 ### License
 
-Copyright (C) 2012-2013 Zachary Elliott
+Copyright (C) 2012-2014 Zachary Elliott
 
 Distributed under the GNU General Public License; see <kbd>C-h t</kbd> in emacs
 to view.
