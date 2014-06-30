@@ -82,9 +82,9 @@
 (easy-menu-define j-mode-menu j-mode-map "J Mode menu"
   '("J"
     ["Start J Console" j-console t]
-    ["Execute Buffer" j-execute-buffer t]
-    ["Execute Region" j-execute-region t]
-    ["Execute Line" j-execute-line t]
+    ["Execute Buffer" j-console-execute-buffer t]
+    ["Execute Region" j-console-execute-region t]
+    ["Execute Line" j-console-execute-line t]
     "---"
     ["J Symbol Look-up" j-help-lookup-symbol t]
     ["J Symbol Dynamic Look-up" j-help-lookup-symbol-at-point t]
