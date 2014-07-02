@@ -5,7 +5,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
-;; Version: 1.1.0
+;; Version: 1.1.1
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
@@ -43,7 +43,7 @@
 ;;; Code:
 
 
-;; (defconst j-font-lock-version "1.0.2"
+;; (defconst j-font-lock-version "1.1.1"
 ;;   "`j-font-lock' version")
 
 (defgroup j-font-lock nil
