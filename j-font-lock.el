@@ -94,7 +94,7 @@
     (modify-syntax-entry ?\( "()"  table)
     (modify-syntax-entry ?\) ")("  table)
     (modify-syntax-entry ?\' "\""  table)
-    (modify-syntax-entry ?\N "w 1" table)
+    (modify-syntax-entry ?N "w 1" table)
     (modify-syntax-entry ?\B "w 2" table)
     (modify-syntax-entry ?\n ">"   table)
     (modify-syntax-entry ?\r ">"   table)
