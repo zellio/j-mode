@@ -129,7 +129,7 @@ the containing buffer"
         (session (j-console-ensure-session)))
     (pop-to-buffer (process-buffer session))
     (goto-char (point-max))
-    (insert-string (format "\n%s\n" region))
+    (insert (format "\n%s\n" region))
     (comint-send-input)))
 
 (defun j-console-execute-line ()
