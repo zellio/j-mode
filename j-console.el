@@ -6,7 +6,7 @@
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/zellio/j-mode
 ;; Version: 1.1.1
-;; Keywords: J, Langauges
+;; Keywords: J, Languages
 
 ;; This file is not part of GNU Emacs.
 
