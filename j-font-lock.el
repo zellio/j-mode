@@ -115,19 +115,20 @@
     "15!:" "18!:" "128!:" ))
 
 (defvar j-font-lock-len-3-verbs
-  '("_9:" "p.." "{::"))
+  '("_1:" "_2:" "_3:" "_4:" "_5:" "_6:" "_7:" "_8:" "_9:" "_0:" "p.." "{::"))
 (defvar j-font-lock-len-2-verbs
-  '("x:" "u:" "s:" "r." "q:" "p:" "p." "o." "L." "j." "I." "i:" "i." "E." "e."
+  '("0:" "1:" "2:" "3:" "4:" "5:" "6:" "7:" "8:" "9:" "_:"
+    "x:" "u:" "s:" "r." "q:" "p:" "p." "o." "L." "j." "I." "i:" "i." "E." "e."
     "C." "A." "?." "\":" "\"." "}:" "}." "{:" "{." "[:" "/:" "\\:" "#:" "#." ";:" ",:"
     ",." "|:" "|." "~:" "~." "$:" "$." "^." "%:" "%." "-:" "-." "*:" "*."  "+:"
-    "+." "_:" ">:" ">." "<:" "<."))
+    "+." ">:" ">." "<:" "<."))
 (defvar j-font-lock-len-1-verbs
-  '("?" "{" "]" "[" ":" "!" "#" ";" "," "|" "$" "^" "%" "-" "*" "+" ">" "<" "="))
+  '("?" "{" "]" "[" "!" "#" ";" "," "|" "$" "^" "%" "-" "*" "+" ">" "<" "="))
 (defvar j-font-lock-verbs
   (append j-font-lock-len-3-verbs j-font-lock-len-2-verbs j-font-lock-len-1-verbs))
 
 (defvar j-font-lock-len-2-adverbs
-  '("t:" "t." "M." "f." "b." "/."))
+  '("t:" "t." "M." "f." "b." "/." "\\."))
 (defvar j-font-lock-len-1-adverbs
   '("}" "." "\\" "/" "~"))
 (defvar j-font-lock-adverbs
@@ -138,7 +139,7 @@
 (defvar j-font-lock-len-2-others
   '("=." "=:" "_." "a." "a:"))
 (defvar j-font-lock-len-1-others
-  '("_" ))
+  '("_"))
 (defvar j-font-lock-others
   (append j-font-lock-len-3-others j-font-lock-len-2-others j-font-lock-len-1-others))
 
