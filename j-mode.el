@@ -1,12 +1,13 @@
-
+;; -*- lexical-binding:t -*-
 ;;; j-mode.el --- Major mode for editing J programs
 
 ;; Copyright (C) 2012 Zachary Elliott
+;; Copyright (C) 2023 LdBeth
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
-;; URL: http://github.com/zellio/j-mode
-;; Version: 1.1.1
-;; Keywords: J, Languages
+;; URL: http://github.com/ldbeth/j-mode
+;; Version: 2.0.0
+;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
 
@@ -47,8 +48,7 @@
 ;;; Code:
 
 ;; Required eval depth for older systems
-(setq max-lisp-eval-depth (max 500 max-lisp-eval-depth))
-
+;; (setq max-lisp-eval-depth (max 500 max-lisp-eval-depth))
 (require 'j-font-lock)
 (require 'j-console)
 (require 'j-help)
@@ -57,7 +57,7 @@
 (defconst j-mode-version "1.1.1"
   "`j-mode' version")
 
-(defgroup j-mode nil
+(defgroup j nil
   "A mode for J"
   :group 'languages
   :prefix "j-")
@@ -66,6 +66,83 @@
   "Hook called by `j-mode'"
   :type 'hook
   :group 'j)
+
+(defcustom j-indent-offset 2
+  "Amount of offset per level of indentation."
+  :type 'natnum
+  :group 'j)
+
+(defconst j-indenting-keywords-regexp
+  (concat "\\<"
+          (regexp-opt '(;;"do\\."
+                        "if." "else." "elseif."
+                        "select." "case." "fcase."
+                        "throw."
+                        "try." "except." "catch." "catcht."
+                        "while." "whilst."
+                        "for." "for_"
+                        "label_"))
+          "\\|\\([_a-zA-Z0-9]+\\)\s*\\(=[.:]\\)\s*{{"))
+(defconst j-dedenting-keywords-regexp
+  (concat "}}\\|\\(\\<"
+          (regexp-opt '("end."
+                        "else." "elseif."
+                        "case." "fcase."
+                        "catch." "catcht." "except."))
+          "\\)"))
+
+(defun j-thing-outside-string (thing-regexp)
+  "Look for REGEXP from `point' til `point-at-eol' outside strings and
+comments. Match-data is set for THING-REGEXP. Returns nil if no match was
+found, else beginning and end of the match."
+  (save-excursion
+    (if (not (search-forward-regexp thing-regexp (pos-eol) t))
+        nil
+        (let* ((thing-begin (match-beginning 0))
+               (thing-end (match-end 0))
+               (parse (save-excursion
+                        (parse-partial-sexp (pos-eol) thing-end))))
+          (if (or (nth 3 parse) (nth 4 parse))
+              nil
+              (list thing-begin thing-end))))))
+
+(defun j-compute-indentation ()
+  "Return what indentation should be in effect, disregarding
+contents of current line."
+  (let ((indent 0))
+    (save-excursion
+      ;; skip empty/comment lines, if that leaves us in the first line, return 0
+      (while (and (= (forward-line -1) 0)
+                  (if (looking-at "\\s *\\\\?$")
+                      t
+                    (setq indent (save-match-data
+                                   (back-to-indentation)
+                                   (if (and (looking-at j-indenting-keywords-regexp)
+                                            (progn
+                                              (goto-char (match-end 0))
+                                              (not (j-thing-outside-string "\\<end\\."))))
+                                       (+ (current-indentation) j-indent-offset)
+                                     (current-indentation))))
+                    nil))))
+    indent))
+
+(defun j-indent-line ()
+  "Indent current line correctly."
+  (interactive)
+  (let ((old-point (point)))
+    (save-match-data
+      (back-to-indentation)
+      (let* ((tentative-indent (j-compute-indentation))
+             ;;FIXME doesn't handle comments correctly
+             (indent (if (looking-at j-dedenting-keywords-regexp)
+                         (- tentative-indent j-indent-offset)
+                         tentative-indent))
+             (delta (- indent (current-indentation))))
+;;         (message "###DEBUGi:%d t:%d" indent tentative-indent)
+        (indent-line-to indent)
+        (back-to-indentation)
+        (goto-char (max (point) (+ old-point delta))))
+      )))
 
 (defvar j-mode-map
   (let ((map (make-sparse-keymap)))
@@ -91,27 +168,25 @@
     ["Help on J-mode" describe-mode t]))
 
 ;;;###autoload
-(defun j-mode ()
+(define-derived-mode j-mode prog-mode "J"
   "Major mode for editing J"
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map j-mode-map)
-  (setq mode-name "J"
-        major-mode 'j-mode)
-  (set-syntax-table j-font-lock-syntax-table)
-  (set (make-local-variable 'comment-start)
-       "NB. ")
-  (set (make-local-variable 'comment-start-skip)
-       "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)NB. *")
-  (set (make-local-variable 'font-lock-comment-start-skip)
-       "NB. *")
-  (set (make-local-variable 'font-lock-defaults)
-       '(j-font-lock-keywords
-         nil nil nil nil
-         ;;(font-lock-mark-block-function . mark-defun)
-         (font-lock-syntactic-face-function
-          . j-font-lock-syntactic-face-function)))
-  (run-mode-hooks 'j-mode-hook))
+  :group 'j
+  :syntax-table j-font-lock-syntax-table
+  (setq-local comment-start
+              "NB. "
+              comment-start-skip
+              "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)NB. *"
+              comment-column 40
+              indent-tabs-mode nil
+              indent-line-function #'j-indent-line
+              font-lock-comment-start-skip
+              "NB. *"
+              font-lock-defaults
+              '(j-font-lock-keywords
+                nil nil nil nil
+                ;;(font-lock-mark-block-function . mark-defun)
+                (font-lock-syntactic-face-function
+                 . j-font-lock-syntactic-face-function))))
 
 
 ;;;###autoload

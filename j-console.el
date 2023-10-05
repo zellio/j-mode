@@ -1,12 +1,13 @@
-
+;; -*- lexical-binding:t -*-
 ;;; j-mode.el --- Major mode for editing J programs
 
 ;; Copyright (C) 2012 Zachary Elliott
+;; Copyright (C) 2023 LdBeth
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
-;; URL: http://github.com/zellio/j-mode
-;; Version: 1.1.1
-;; Keywords: J, Languages
+;; URL: http://github.com/ldbeth/j-mode
+;; Version: 2.0.0
+;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
 
@@ -46,7 +47,7 @@
   :group 'j
   :prefix "j-console-")
 
-(defcustom j-console-cmd "ijconsole"
+(defcustom j-console-cmd "jc"
   "Name of the executable used for the J REPL session"
   :type 'string
   :group 'j-console)
@@ -86,7 +87,8 @@ Should be NIL if there is no file not the empty string"
 
 (defun j-console-create-session ()
   "Starts a comint session wrapped around the j-console-cmd"
-  (setq comint-process-echoes t)
+  (setq comint-process-echoes nil
+        comint-use-prompt-regexp t)
   (apply 'make-comint j-console-cmd-buffer-name
          j-console-cmd j-console-cmd-init-file j-console-cmd-args)
   (mapc
@@ -110,7 +112,8 @@ Should be NIL if there is no file not the empty string"
         (get-process j-console-cmd-buffer-name))))
 
 (define-derived-mode inferior-j-mode comint-mode "Inferior J"
-  "Major mode for J inferior process.")
+  "Major mode for J inferior process."
+  (setq comint-prompt-regexp "\s+"))
 
 ;;;###autoload
 (defun j-console ()
@@ -135,7 +138,7 @@ the containing buffer"
 (defun j-console-execute-line ()
   "Sends current line to the j-console-cmd session and exectues it"
   (interactive)
-  (j-console-execute-region (point-at-bol) (point-at-eol)))
+  (j-console-execute-region (pos-bol) (pos-eol)))
 
 (defun j-console-execute-buffer ()
   "Sends current buffer to the j-console-cmd session and exectues it"

@@ -1,10 +1,12 @@
-;;; j-help.el --- Documentation extention for j-mode -*- lexical-binding: t; -*-
+;; -*- lexical-binding:t -*-
+;;; j-help.el --- Documentation extention for j-mode
 
 ;; Copyright (C) 2012 Zachary Elliott
+;; Copyright (C) 2023 LdBeth
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
-;; URL: http://github.com/zellio/j-mode
-;; Version: 1.1.1
+;; URL: http://github.com/ldbeth/j-mode
+;; Version: 2.0.0
 ;; Keywords: J, Languages
 
 ;; This file is not part of GNU Emacs.
@@ -41,19 +43,6 @@
 
 ;;; Code:
 
-(defmacro if-let ( binding then &optional else )
-  "Bind value according to BINDING and check for truthy-ness
-If the test passes then eval THEN with the BINDING varlist bound
-If no, eval ELSE with no binding"
-  (let* ((sym (caar binding))
-         (tst (cdar binding))
-         (gts (gensym)))
-    `(let ((,gts ,@tst))
-       (if ,gts
-         (let ((,sym ,gts))
-           ,then)
-         ,else))))
-
 (defun group-by* ( list fn prev coll agr )
   "Helper method for the group-by function. Should not be called directly."
   (if list
@@ -70,15 +59,12 @@ It groups the objects in LIST according to the predicate FN"
   (let ((sl (sort list (lambda (x y) (< (funcall fn x) (funcall fn y))))))
     (group-by* sl fn '() '() '())))
 
-(unless (fboundp 'some)
-  (defun some ( fn list )
-    (when list
-      (let ((val (funcall fn (car list))))
-	(if val val (some fn (cdr list)))))))
-
-(unless (fboundp 'caddr)
-  (defun caddr ( list )
-    (car (cdr (cdr list)))))
+(defun j-some ( fn list )
+  (let (val)
+    (while (and list (not val))
+      (setq val (funcall fn (car list))
+            list (cdr list)))
+    val))
 
 (defgroup j-help nil
   "Documentation extention for j-mode"
@@ -154,7 +140,7 @@ It groups the objects in LIST according to the predicate FN"
   (let ((dic (j-help-valid-dictionary)))
     (if (or (not alist-data) (string= dic ""))
         (error "%s" "No dictionary found. Please specify a dictionary.")
-      (let ((name (car alist-data))
+      (let ((_name (car alist-data))
             (doc-name (cdr alist-data)))
         (format "%s/%s.%s" dic doc-name "htm")))))
 
@@ -167,7 +153,7 @@ It groups the objects in LIST according to the predicate FN"
 
 string * int -> (string * string) list"
   (unless (or (< point 0) (< (length s) point))
-    (some
+    (j-some
      (lambda (x)
        (let* ((check-size (car x)))
          (if (and
@@ -182,8 +168,8 @@ string * int -> (string * string) list"
   "int -> (string * string) list"
   (save-excursion
     (goto-char point)
-    (let* ((bol (point-at-bol))
-           (eol (point-at-eol))
+    (let* ((bol (pos-bol))
+           (eol (pos-eol))
            (s (buffer-substring-no-properties bol eol)))
       (j-help-determine-symbol s (- point bol)))))
 
@@ -203,9 +189,9 @@ string * int -> (string * string) list"
   (save-excursion
     (goto-char point)
     (j-help-branch-determine-symbol-at-point*
-     (buffer-substring-no-properties (point-at-bol) (point-at-eol))
-     (- (max (- point j-help-symbol-search-branch-limit) (point-at-bol)) (point-at-bol))
-     (- point (point-at-bol))
+     (buffer-substring-no-properties (pos-bol) (pos-eol))
+     (- (max (- point j-help-symbol-search-branch-limit) (pos-bol)) (pos-bol))
+     (- point (pos-bol))
      nil)))
 
 ;;;###autoload

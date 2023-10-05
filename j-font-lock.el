@@ -1,12 +1,13 @@
-
+;; -*- lexical-binding:t -*-
 ;;; j-font-lock.el --- font-lock extension for j-mode
 
 ;; Copyright (C) 2012 Zachary Elliott
+;; Copyright (C) 2023 LdBeth
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
-;; URL: http://github.com/zellio/j-mode
-;; Version: 1.1.1
-;; Keywords: J, Languages
+;; URL: http://github.com/ldbeth/j-mode
+;; Version: 2.0.0
+;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
 
@@ -42,9 +43,6 @@
 
 ;;; Code:
 
-
-;; (defconst j-font-lock-version "1.1.1"
-;;   "`j-font-lock' version")
 
 (defgroup j-font-lock nil
   "font-lock extension for j-mode"
@@ -94,14 +92,37 @@
     (modify-syntax-entry ?\( "()"  table)
     (modify-syntax-entry ?\) ")("  table)
     (modify-syntax-entry ?\' "\""  table)
-    (modify-syntax-entry ?N "w 1" table)
-    (modify-syntax-entry ?\B "w 2" table)
+    (modify-syntax-entry ?N "w 1"  table)
+    (modify-syntax-entry ?B "w 2"  table)
     (modify-syntax-entry ?\n ">"   table)
     (modify-syntax-entry ?\r ">"   table)
     table)
   "Syntax table for j-mode")
 
-(defvar j-font-lock-constants '())
+(defvar j-font-lock-constants
+  '(
+    ;; char codes
+    "CR" "CRLF" "LF" "TAB"
+    ;; grammar codes
+    ;;0     1          2            3      3       4
+    "noun" "adverb"  "conjunction" "verb" "monad" "dyad"
+    ))
+
+(defvar j-font-lock-builtins
+  `(;; modules
+    "require" "load" "loadd" "script" "scriptd"
+    "jpath" "jcwdpath" "jhostpath" "jsystemdefs"
+    ;; OO
+    "coclass" "cocreate" "cocurrent" "codestroy" "coerase"
+    "coextend" "cofullname" "coinsert" "coname" "conames" "conew"
+    "conl" "copath" "coreset"
+    ;; environment
+    "type" "names" "nameclass" "nc" "namelist" "nl" "erase"
+    ;; system
+    "assert"
+    "getenv" "setenv" "exit" "stdin" "stdout" "stderr"
+    ;; :   :0
+    "def" "define" ))
 
 (defvar j-font-lock-control-structures
   '("assert."  "break."  "continue."  "while."  "whilst."  "for."  "do."  "end."
@@ -110,45 +131,52 @@
     ;; "for_[a-zA-Z]+\\."  "goto_[a-zA-Z]+\\."  "label_[a-zA-Z]+\\."
     ))
 
+(defvar j-font-lock-direct-definition
+  '("{{" "}}"))
+
 (defvar j-font-lock-foreign-conjunctions
-  '("0!:" "1!:" "2!:" "3!:" "4!:" "5!:" "6!:" "7!:" "8!:" "9!:" "11!:" "13!:"
+  '("0!:" "1!:" "2!:" "3!:" "4!:" "5!:" "6!:" "7!:" "8!:" "9!:" "13!:"
     "15!:" "18!:" "128!:" ))
 
 (defvar j-font-lock-len-3-verbs
-  '("_9:" "p.." "{::"))
+  '("p.." "{::" "__:"))
 (defvar j-font-lock-len-2-verbs
   '("x:" "u:" "s:" "r." "q:" "p:" "p." "o." "L." "j." "I." "i:" "i." "E." "e."
     "C." "A." "?." "\":" "\"." "}:" "}." "{:" "{." "[:" "/:" "\\:" "#:" "#." ";:" ",:"
     ",." "|:" "|." "~:" "~." "$:" "$." "^." "%:" "%." "-:" "-." "*:" "*."  "+:"
     "+." "_:" ">:" ">." "<:" "<."))
 (defvar j-font-lock-len-1-verbs
-  '("?" "{" "]" "[" ":" "!" "#" ";" "," "|" "$" "^" "%" "-" "*" "+" ">" "<" "="))
+  '("?" "{" "]" "[" "!" "#" ";" "," "|" "$" "^" "%" "-" "*" "+" ">" "<" "="))
 (defvar j-font-lock-verbs
   (append j-font-lock-len-3-verbs j-font-lock-len-2-verbs j-font-lock-len-1-verbs))
 
+(defvar j-font-lock-len-3-adverbs
+  '("\\.."))
 (defvar j-font-lock-len-2-adverbs
-  '("t:" "t." "M." "f." "b." "/."))
+  '("]:" "M." "f." "b." "/." "\\."))
 (defvar j-font-lock-len-1-adverbs
-  '("}" "." "\\" "/" "~"))
+  '("}" "\\" "/" "~"))
 (defvar j-font-lock-adverbs
-  (append j-font-lock-len-2-adverbs j-font-lock-len-1-adverbs))
+  (append j-font-lock-len-3-adverbs j-font-lock-len-2-adverbs j-font-lock-len-1-adverbs))
 
 (defvar j-font-lock-len-3-others
   '("NB."))
 (defvar j-font-lock-len-2-others
-  '("=." "=:" "_." "a." "a:"))
+  '("=." "=:" "a." "a:" ;; "__" "_."
+    ))
 (defvar j-font-lock-len-1-others
   '("_" ))
 (defvar j-font-lock-others
   (append j-font-lock-len-3-others j-font-lock-len-2-others j-font-lock-len-1-others))
 
 (defvar j-font-lock-len-3-conjunctions
-  '("&.:"))
+  '("&.:" "F.." "F.:" "F:." "F::"))
 (defvar j-font-lock-len-2-conjunctions
-  '("T." "S:" "L:" "H." "D:" "D." "d." "&:" "&." "@:" "@." "`:" "!:" "!." ";."
-    "::" ":." ".:" ".." "^:"))
+  '("T." "t." "S:" "L:" "H." "D:" "D." "d." "F." "F:" "m."
+    "&:" "&." "@:" "@." "`:" "!:" "!." ";."
+    "::" ":." ".:" ".." "^:" " ."))
 (defvar j-font-lock-len-1-conjunctions
-  '("&" "@" "`" "\"" ":" "."))
+  '("&" "@" "`" "\"" ":"))
 (defvar j-font-lock-conjunctions
   (append j-font-lock-len-3-conjunctions
           j-font-lock-len-2-conjunctions
@@ -159,24 +187,31 @@
   `(
     ("\\([_a-zA-Z0-9]+\\)\s*\\(=[.:]\\)"
      (1 font-lock-variable-name-face) (2 j-other-face))
-
     (,(regexp-opt j-font-lock-foreign-conjunctions) . font-lock-warning-face)
-    (,(concat (regexp-opt j-font-lock-control-structures)
-              "\\|\\(?:\\(?:for\\|goto\\|label\\)_[a-zA-Z]+\\.\\)")
+    (,(concat "\\<" (regexp-opt j-font-lock-control-structures)
+              "\\|\\(?:\\(for\\|goto\\|label\\)_[a-zA-Z]+\\.\\)")
      . font-lock-keyword-face)
+    (,(concat "\\<" (regexp-opt j-font-lock-builtins)) . font-lock-builtin-face)
     (,(regexp-opt j-font-lock-constants) . font-lock-constant-face)
-    (,(regexp-opt j-font-lock-len-3-verbs) . j-verb-face)
+    (,(concat (regexp-opt j-font-lock-len-3-verbs)
+              "\\|\\(?:_[0-9]:\\)")
+     . j-verb-face)
+    (,(regexp-opt j-font-lock-len-3-adverbs) . j-adverb-face)
     (,(regexp-opt j-font-lock-len-3-conjunctions) . j-conjunction-face)
     ;;(,(regexp-opt j-font-lock-len-3-others) . )
-    (,(regexp-opt j-font-lock-len-2-verbs) . j-verb-face)
+    (,(concat (regexp-opt j-font-lock-len-2-verbs)
+              "\\|\\(?:[0-9]:\\)")
+     . j-verb-face)
     (,(regexp-opt j-font-lock-len-2-adverbs) . j-adverb-face)
     (,(regexp-opt j-font-lock-len-2-conjunctions) . j-conjunction-face)
-    ;;(,(regexp-opt j-font-lock-len-2-others) . )
+    (,(regexp-opt j-font-lock-len-2-others) . j-other-face)
+    (,(regexp-opt j-font-lock-direct-definition) . font-lock-keyword-face)
     (,(regexp-opt j-font-lock-len-1-verbs) . j-verb-face)
     (,(regexp-opt j-font-lock-len-1-adverbs) . j-adverb-face)
     (,(regexp-opt j-font-lock-len-1-conjunctions) . j-conjunction-face)
-    ;;(,(regexp-opt j-font-lock-len-1-other) . )
-    ) "J Mode font lock keys words")
+    ;;(,(regexp-opt j-font-lock-len-1-others) . j-other-face)
+    )
+  "J Mode font lock keys words")
 
 (defun j-font-lock-syntactic-face-function (state)
   "Function for detection of string vs. Comment Note: J comments
@@ -187,7 +222,8 @@ this in emacs and it poses problems"
       (and (<= (+ start-pos 3) (point-max))
            (eq (char-after start-pos) ?N)
            (string= (buffer-substring-no-properties
-                     start-pos (+ start-pos 3)) "NB.")
+                     start-pos (+ start-pos 3))
+                    "NB.")
            font-lock-comment-face))))
 
 (provide 'j-font-lock)
