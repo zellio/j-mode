@@ -52,6 +52,7 @@
 (require 'j-font-lock)
 (require 'j-console)
 (require 'j-help)
+(eval-when-compile (require 'rx))
 
 
 (defconst j-mode-version "1.1.1"
@@ -73,23 +74,28 @@
   :group 'j)
 
 (defconst j-indenting-keywords-regexp
-  (concat "\\<"
-          (regexp-opt '(;;"do\\."
-                        "if." "else." "elseif."
-                        "select." "case." "fcase."
-                        "throw."
-                        "try." "except." "catch." "catcht."
-                        "while." "whilst."
-                        "for." "for_"
-                        "label_"))
-          "\\|\\([_a-zA-Z0-9]+\\)\s*\\(=[.:]\\)\s*{{"))
+  (rx (or (seq bow
+               (or (regexp
+                    (regexp-opt
+                     '(;;"do\\."
+                       "if." "else." "elseif."
+                       "select." "case." "fcase."
+                       "throw."
+                       "try." "except." "catch." "catcht."
+                       "while." "whilst."
+                       "for.")))
+                   (seq (or "for" "goto" "label")
+                        (regexp "_[a-zA-Z]+\\."))))
+          (seq (regexp "[_a-zA-Z0-9]+")
+               (* "\s") "=" (or "." ":") (* "\s")
+               "{{"))))
 (defconst j-dedenting-keywords-regexp
-  (concat "}}\\|\\(\\<"
-          (regexp-opt '("end."
-                        "else." "elseif."
-                        "case." "fcase."
-                        "catch." "catcht." "except."))
-          "\\)"))
+  (rx (or "}}"
+          (seq bow
+               (regexp (regexp-opt '("end."
+                                     "else." "elseif."
+                                     "case." "fcase."
+                                     "catch." "catcht." "except.")))))))
 
 (defun j-thing-outside-string (thing-regexp)
   "Look for REGEXP from `point' til `point-at-eol' outside strings and

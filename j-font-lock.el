@@ -42,7 +42,7 @@
 ;; USA.
 
 ;;; Code:
-
+(eval-when-compile (require 'rx))
 
 (defgroup j-font-lock nil
   "font-lock extension for j-mode"
@@ -89,6 +89,7 @@
     (modify-syntax-entry ?\\ "."   table)
     (modify-syntax-entry ?\. "w"   table)
     (modify-syntax-entry ?\: "w"   table)
+    (modify-syntax-entry ?\_ "w"   table)
     (modify-syntax-entry ?\( "()"  table)
     (modify-syntax-entry ?\) ")("  table)
     (modify-syntax-entry ?\' "\""  table)
@@ -102,7 +103,7 @@
 (defvar j-font-lock-constants
   '(
     ;; char codes
-    "CR" "CRLF" "LF" "TAB"
+    "CR" "CRLF" "LF" "TAB" "EMPTY"
     ;; grammar codes
     ;;0     1          2            3      3       4
     "noun" "adverb"  "conjunction" "verb" "monad" "dyad"
@@ -118,6 +119,8 @@
     "conl" "copath" "coreset"
     ;; environment
     "type" "names" "nameclass" "nc" "namelist" "nl" "erase"
+    ;; dll
+    "cd" "memr" "memw" "mema" "memf" "memu" "cdf"
     ;; system
     "assert"
     "getenv" "setenv" "exit" "stdin" "stdout" "stderr"
@@ -127,9 +130,7 @@
 (defvar j-font-lock-control-structures
   '("assert."  "break."  "continue."  "while."  "whilst."  "for."  "do."  "end."
     "if."  "else."  "elseif."  "return."  "select."  "case."  "fcase."  "throw."
-    "try."  "catch."  "catchd."  "catcht."  "end."
-    ;; "for_[a-zA-Z]+\\."  "goto_[a-zA-Z]+\\."  "label_[a-zA-Z]+\\."
-    ))
+    "try."  "catch."  "catchd."  "catcht."  "end."))
 
 (defvar j-font-lock-direct-definition
   '("{{" "}}"))
@@ -139,12 +140,12 @@
     "15!:" "18!:" "128!:" ))
 
 (defvar j-font-lock-len-3-verbs
-  '("p.." "{::" "__:"))
+  '("p.." "{::"))
 (defvar j-font-lock-len-2-verbs
   '("x:" "u:" "s:" "r." "q:" "p:" "p." "o." "L." "j." "I." "i:" "i." "E." "e."
-    "C." "A." "?." "\":" "\"." "}:" "}." "{:" "{." "[:" "/:" "\\:" "#:" "#." ";:" ",:"
+    "C." "A." "T." "?." "\":" "\"." "}:" "}." "{:" "{." "[:" "/:" "\\:" "#:" "#." ";:" ",:"
     ",." "|:" "|." "~:" "~." "$:" "$." "^." "%:" "%." "-:" "-." "*:" "*."  "+:"
-    "+." "_:" ">:" ">." "<:" "<."))
+    "+." ">:" ">." "<:" "<."))
 (defvar j-font-lock-len-1-verbs
   '("?" "{" "]" "[" "!" "#" ";" "," "|" "$" "^" "%" "-" "*" "+" ">" "<" "="))
 (defvar j-font-lock-verbs
@@ -172,11 +173,11 @@
 (defvar j-font-lock-len-3-conjunctions
   '("&.:" "F.." "F.:" "F:." "F::"))
 (defvar j-font-lock-len-2-conjunctions
-  '("T." "t." "S:" "L:" "H." "D:" "D." "d." "F." "F:" "m."
+  '("t." "S:" "L:" "H." "D:" "D." "d." "F." "F:" "m."
     "&:" "&." "@:" "@." "`:" "!:" "!." ";."
-    "::" ":." ".:" ".." "^:" " ."))
+    "::" ":." ".:" ".." "^:" " ." " :"))
 (defvar j-font-lock-len-1-conjunctions
-  '("&" "@" "`" "\"" ":"))
+  '("&" "@" "`" "\""))
 (defvar j-font-lock-conjunctions
   (append j-font-lock-len-3-conjunctions
           j-font-lock-len-2-conjunctions
@@ -185,22 +186,25 @@
 
 (defvar j-font-lock-keywords
   `(
-    ("\\([_a-zA-Z0-9]+\\)\s*\\(=[.:]\\)"
+    (,(rx (seq (group (regexp "[_a-zA-Z0-9]+"))
+               (* "\s")
+               (group "=" (or "." ":"))))
      (1 font-lock-variable-name-face) (2 j-other-face))
     (,(regexp-opt j-font-lock-foreign-conjunctions) . font-lock-warning-face)
-    (,(concat "\\<" (regexp-opt j-font-lock-control-structures)
-              "\\|\\(?:\\(for\\|goto\\|label\\)_[a-zA-Z]+\\.\\)")
+    (,(rx bow (or (regexp (regexp-opt j-font-lock-control-structures))
+                  (seq (or "for" "goto" "label")
+                       (regexp "_[a-zA-Z]+\\."))))
      . font-lock-keyword-face)
-    (,(concat "\\<" (regexp-opt j-font-lock-builtins)) . font-lock-builtin-face)
+    (,(rx bow (regexp (regexp-opt j-font-lock-builtins)) eow)
+     . font-lock-builtin-face)
     (,(regexp-opt j-font-lock-constants) . font-lock-constant-face)
-    (,(concat (regexp-opt j-font-lock-len-3-verbs)
-              "\\|\\(?:_[0-9]:\\)")
+    (,(regexp-opt j-font-lock-len-3-verbs)
      . j-verb-face)
     (,(regexp-opt j-font-lock-len-3-adverbs) . j-adverb-face)
     (,(regexp-opt j-font-lock-len-3-conjunctions) . j-conjunction-face)
     ;;(,(regexp-opt j-font-lock-len-3-others) . )
-    (,(concat (regexp-opt j-font-lock-len-2-verbs)
-              "\\|\\(?:[0-9]:\\)")
+    (,(rx (or (regexp (regexp-opt j-font-lock-len-2-verbs))
+              (seq bow (opt "_") (regexp "[0-9_]") ":")))
      . j-verb-face)
     (,(regexp-opt j-font-lock-len-2-adverbs) . j-adverb-face)
     (,(regexp-opt j-font-lock-len-2-conjunctions) . j-conjunction-face)
