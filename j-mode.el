@@ -54,10 +54,6 @@
 (require 'j-help)
 (eval-when-compile (require 'rx))
 
-
-(defconst j-mode-version "1.1.1"
-  "`j-mode' version")
-
 (defgroup j nil
   "A mode for J"
   :group 'languages
@@ -88,9 +84,16 @@
                         (regexp "_[a-zA-Z]+\\."))))
           (seq (regexp "[_a-zA-Z0-9]+")
                (* "\s") "=" (or "." ":") (* "\s")
-               "{{"))))
+               (or "{{"
+                   (seq "0" (+ "\s") ":" (* "\s")
+                        (regexp
+                         (regexp-opt
+                          '("dyad" "monad" "adverb" "verb" "conjunction"
+                            "1" "2" "3" "4")))
+                        eol))))))
 (defconst j-dedenting-keywords-regexp
   (rx (or "}}"
+          (seq bol ")" eol)
           (seq bow
                (regexp (regexp-opt '("end."
                                      "else." "elseif."
@@ -126,7 +129,10 @@ contents of current line."
                                    (if (and (looking-at j-indenting-keywords-regexp)
                                             (progn
                                               (goto-char (match-end 0))
-                                              (not (j-thing-outside-string "\\<end\\."))))
+                                              (not (j-thing-outside-string
+                                                    (rx (or (seq word-start "end.")
+                                                            "}}"
+                                                            (seq bol ")" eol)))))))
                                        (+ (current-indentation) j-indent-offset)
                                      (current-indentation))))
                     nil))))
@@ -181,8 +187,12 @@ contents of current line."
   (setq-local comment-start
               "NB. "
               comment-start-skip
-              "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)NB. *"
+              (rx (group (group (or bol (not (any "\\" "\n" ))))
+                         (* (group "\\\\")))
+                  "NB."
+                  (* "\s"))
               comment-column 40
+              syntax-propertize-function #'j-mode-syntax-propertize
               indent-tabs-mode nil
               indent-line-function #'j-indent-line
               font-lock-comment-start-skip

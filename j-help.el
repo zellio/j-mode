@@ -48,7 +48,7 @@
   (if list
       (let* ((head (car list))
              (tail (cdr list)))
-        (if (eq (funcall fn head) (funcall fn prev))
+        (if (eql (funcall fn head) (funcall fn prev))
             (group-by* tail fn head (cons head coll) agr)
           (group-by* tail fn head '() (cons coll agr))))
     (cons coll agr)))

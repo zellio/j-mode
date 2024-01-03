@@ -83,13 +83,13 @@
   (let ((table (make-syntax-table)))
     (modify-syntax-entry ?\{ "."   table)
     (modify-syntax-entry ?\} "."   table)
-    (modify-syntax-entry ?\[ "."   table)
-    (modify-syntax-entry ?\] "."   table)
-    (modify-syntax-entry ?\" "."   table)
+    (modify-syntax-entry '(?! . ?&)  "." table)
+    (modify-syntax-entry '(?* . ?/)  "." table)
+    (modify-syntax-entry '(?: . ?@)  "." table)
+    (modify-syntax-entry '(?\[ . ?^) "." table)
     (modify-syntax-entry ?\\ "."   table)
-    (modify-syntax-entry ?\. "w"   table)
-    (modify-syntax-entry ?\: "w"   table)
-    (modify-syntax-entry ?\_ "w"   table)
+    ;; (modify-syntax-entry ?\. "_"   table)
+    ;; (modify-syntax-entry ?\: "_"   table)
     (modify-syntax-entry ?\( "()"  table)
     (modify-syntax-entry ?\) ")("  table)
     (modify-syntax-entry ?\' "\""  table)
@@ -99,6 +99,11 @@
     (modify-syntax-entry ?\r ">"   table)
     table)
   "Syntax table for j-mode")
+
+(defalias 'j-mode-syntax-propertize
+  (syntax-propertize-rules
+   ("^\\()\\)" (1 "."))
+   ("{{\\()\\)\s" (1 "."))))
 
 (defvar j-font-lock-constants
   '(
@@ -171,11 +176,11 @@
   (append j-font-lock-len-3-others j-font-lock-len-2-others j-font-lock-len-1-others))
 
 (defvar j-font-lock-len-3-conjunctions
-  '("&.:" "F.." "F.:" "F:." "F::"))
+  '("&.:" "F.." "F.:" "F:." "F::" " ::" " :."))
 (defvar j-font-lock-len-2-conjunctions
   '("t." "S:" "L:" "H." "D:" "D." "d." "F." "F:" "m."
     "&:" "&." "@:" "@." "`:" "!:" "!." ";."
-    "::" ":." ".:" ".." "^:" " ." " :"))
+    "^:" " ." " :"))
 (defvar j-font-lock-len-1-conjunctions
   '("&" "@" "`" "\""))
 (defvar j-font-lock-conjunctions
@@ -186,25 +191,34 @@
 
 (defvar j-font-lock-keywords
   `(
-    (,(rx (seq (group (regexp "[_a-zA-Z0-9]+"))
+    (,(rx (seq (group (* (any "_a-zA-Z0-9")))
                (* "\s")
                (group "=" (or "." ":"))))
      (1 font-lock-variable-name-face) (2 j-other-face))
+    (,(rx bow (any "a-zA-Z")
+          (* (any "_a-zA-Z0-9"))
+          "_:") ;; Self-Effacing References
+     . font-lock-warning-face)
     (,(regexp-opt j-font-lock-foreign-conjunctions) . font-lock-warning-face)
-    (,(rx bow (or (regexp (regexp-opt j-font-lock-control-structures))
-                  (seq (or "for" "goto" "label")
-                       (regexp "_[a-zA-Z]+\\."))))
+    (,(rx symbol-start
+          (or (regexp (regexp-opt j-font-lock-control-structures))
+              (seq (or "for" "goto" "label")
+                   "_" (+ (any "a-zA-Z")) ".")))
      . font-lock-keyword-face)
-    (,(rx bow (regexp (regexp-opt j-font-lock-builtins)) eow)
+    (,(rx symbol-start (regexp (regexp-opt j-font-lock-builtins)) eow)
      . font-lock-builtin-face)
-    (,(regexp-opt j-font-lock-constants) . font-lock-constant-face)
+    (,(rx symbol-start
+          (regexp
+           (regexp-opt j-font-lock-constants))
+          eow)
+     . font-lock-constant-face)
     (,(regexp-opt j-font-lock-len-3-verbs)
      . j-verb-face)
     (,(regexp-opt j-font-lock-len-3-adverbs) . j-adverb-face)
     (,(regexp-opt j-font-lock-len-3-conjunctions) . j-conjunction-face)
     ;;(,(regexp-opt j-font-lock-len-3-others) . )
     (,(rx (or (regexp (regexp-opt j-font-lock-len-2-verbs))
-              (seq bow (opt "_") (regexp "[0-9_]") ":")))
+              (seq symbol-start (opt "_") (regexp "[0-9_]") ":")))
      . j-verb-face)
     (,(regexp-opt j-font-lock-len-2-adverbs) . j-adverb-face)
     (,(regexp-opt j-font-lock-len-2-conjunctions) . j-conjunction-face)

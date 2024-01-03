@@ -37,10 +37,6 @@
 
 (require 'comint)
 
-
-;; (defconst j-console-version "1.1.1"
-;;   "`j-console' version")
-
 (defgroup j-console nil
   "REPL integration extention for `j-mode'"
   :group 'applications
