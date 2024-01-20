@@ -6,7 +6,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/ldbeth/j-mode
-;; Version: 2.0.0
+;; Version: 2.0.1
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.

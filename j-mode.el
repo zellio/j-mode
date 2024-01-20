@@ -2,11 +2,11 @@
 ;;; j-mode.el --- Major mode for editing J programs
 
 ;; Copyright (C) 2012 Zachary Elliott
-;; Copyright (C) 2023 LdBeth
+;; Copyright (C) 2023, 2024 LdBeth
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/ldbeth/j-mode
-;; Version: 2.0.0
+;; Version: 2.0.1
 ;; Keywords: J, Langauges
 
 ;; This file is not part of GNU Emacs.
@@ -77,28 +77,31 @@
                        "if." "else." "elseif."
                        "select." "case." "fcase."
                        "throw."
-                       "try." "except." "catch." "catcht."
+                       "try." "except." "catch." "catcht." "catchd."
                        "while." "whilst."
                        "for.")))
                    (seq (or "for" "goto" "label")
                         (regexp "_[a-zA-Z]+\\."))))
-          (seq (regexp "[_a-zA-Z0-9]+")
+          (seq (regexp "[_a-zA-Z0-9]+") (? "'")
                (* "\s") "=" (or "." ":") (* "\s")
                (or "{{"
-                   (seq "0" (+ "\s") ":" (* "\s")
-                        (regexp
+                   (seq (regexp
                          (regexp-opt
                           '("dyad" "monad" "adverb" "verb" "conjunction"
                             "1" "2" "3" "4")))
-                        eol))))))
+                        (+ "\s")
+                        (or (seq ":" (* "\s") "0")
+                            "define")))))))
+
 (defconst j-dedenting-keywords-regexp
   (rx (or "}}"
-          (seq bol ")" eol)
+          (seq ")" eol)
           (seq bow
                (regexp (regexp-opt '("end."
                                      "else." "elseif."
                                      "case." "fcase."
-                                     "catch." "catcht." "except.")))))))
+                                     "catch." "catcht." "catchd."
+                                     "except.")))))))
 
 (defun j-thing-outside-string (thing-regexp)
   "Look for REGEXP from `point' til `point-at-eol' outside strings and
@@ -109,8 +112,10 @@ found, else beginning and end of the match."
         nil
         (let* ((thing-begin (match-beginning 0))
                (thing-end (match-end 0))
+               (eol (pos-eol))
                (parse (save-excursion
-                        (parse-partial-sexp (pos-eol) thing-end))))
+                        (parse-partial-sexp eol
+                                            (max eol thing-end)))))
           (if (or (nth 3 parse) (nth 4 parse))
               nil
               (list thing-begin thing-end))))))
@@ -147,7 +152,7 @@ contents of current line."
       (let* ((tentative-indent (j-compute-indentation))
              ;;FIXME doesn't handle comments correctly
              (indent (if (looking-at j-dedenting-keywords-regexp)
-                         (- tentative-indent j-indent-offset)
+                         (max 0 (- tentative-indent j-indent-offset))
                          tentative-indent))
              (delta (- indent (current-indentation))))
 ;;         (message "###DEBUGi:%d t:%d" indent tentative-indent)
@@ -155,6 +160,59 @@ contents of current line."
         (back-to-indentation)
         (goto-char (max (point) (+ old-point delta))))
       )))
+
+(defun j-which-explict-definition ()
+  "Return nil, `:one-liner' or `:multi-liner' depending on what
+  kind of explicit definition we are `looking-at'. Modifies `match-data'!"
+  ;; XXX we could dump the check for NB. if we prepending '^' to the others
+  (cond ((j-thing-outside-string (rx (or (seq bow "define")
+                                         (seq ":" (* "\s") "0"))
+                                     (* "\s")
+                                     eol))
+         :multi-liner)
+        ((j-thing-outside-string (rx (or (seq bow "def")
+                                         " :")
+                                     (+ "\s")))
+         (pcase (char-after (match-end 0))
+           ('nil (error "XXX Illegal definition?"))
+           (?\' :one-liner)
+           (_ :multi-liner)))
+        ((j-thing-outside-string "{{") :direct)
+        (t nil)))
+
+(defun j-end-of-explicit-definition ()
+  "Goto the end of the next explicit definition below point."
+  (interactive)
+  (if (not (= (point) (pos-eol)))
+      (beginning-of-line)
+      (forward-line 1))
+  (beginning-of-line)
+  (save-match-data
+    (pcase (j-which-explict-definition)
+      ('nil (forward-line 1))
+      (:one-liner (beginning-of-line 2) t)
+      (:multi-liner (search-forward-regexp "^)") t)
+      (:direct (search-forward-regexp
+                (rx "}}" (or eol (not (any ".:")))))
+               t))))
+
+(defun j-beginning-of-explicit-definition ()
+  "Got the start of the next explicit definition above point."
+  (interactive)
+  (let ((cur (point)) beg end)
+    (save-excursion
+      (if (not (= (point) (pos-bol)))
+          (beginning-of-line)
+        (forward-line -1))
+      (save-match-data
+        (while (not (or (j-which-explict-definition)
+                        (= (pos-bol) (point-min))))
+          (forward-line -1)))
+      (setq beg (point))
+      (j-end-of-explicit-definition)
+      (setq end (point)))
+    (if (> end cur) (goto-char beg)
+      (beginning-of-line))))
 
 (defvar j-mode-map
   (let ((map (make-sparse-keymap)))
@@ -195,6 +253,8 @@ contents of current line."
               syntax-propertize-function #'j-mode-syntax-propertize
               indent-tabs-mode nil
               indent-line-function #'j-indent-line
+              beginning-of-defun-function #'j-beginning-of-explicit-definition
+              end-of-defun-function       #'j-end-of-explicit-definition
               font-lock-comment-start-skip
               "NB. *"
               font-lock-defaults

@@ -6,7 +6,7 @@
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
 ;; URL: http://github.com/ldbeth/j-mode
-;; Version: 2.0.0
+;; Version: 2.0.1
 ;; Keywords: J, Languages
 
 ;; This file is not part of GNU Emacs.
@@ -121,7 +121,7 @@ It groups the objects in LIST according to the predicate FN"
 (defconst j-help-dictionary-data-block
   (mapcar
    (lambda (l) (list (length (caar l))
-                     (regexp-opt (mapcar 'car l))
+                     (regexp-opt (mapcar #'car l))
                      l))
    (delq nil (group-by j-help-voc-alist (lambda (x) (length (car x))))))
   "(int * string * (string * string) alist) list")
