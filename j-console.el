@@ -128,7 +128,7 @@ the containing buffer"
         (session (j-console-ensure-session)))
     (pop-to-buffer (process-buffer session))
     (goto-char (point-max))
-    (insert (format "\n%s\n" region))
+    (insert (format "%s" region))
     (comint-send-input)))
 
 (defun j-console-execute-line ()
@@ -140,6 +140,17 @@ the containing buffer"
   "Sends current buffer to the j-console-cmd session and exectues it"
   (interactive)
   (j-console-execute-region (point-min) (point-max)))
+
+;;XXX should maybe check that we are indeed in an explicit def, unlike
+;;elisp counterpart
+(defun j-console-execute-definition ()
+  "Send the current explicit definition to a running J session."
+  (interactive)
+  (save-excursion
+    (mark-defun)
+    (let ((start (point))
+          (end (mark)))
+      (j-console-execute-region start end))))
 
 (provide 'j-console)
 

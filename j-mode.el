@@ -82,6 +82,7 @@
                        "for.")))
                    (seq (or "for" "goto" "label")
                         (regexp "_[a-zA-Z]+\\."))))
+          (seq bol ":" eol)
           (seq (regexp "[_a-zA-Z0-9]+") (? "'")
                (* "\s") "=" (or "." ":") (* "\s")
                (or "{{"
@@ -151,15 +152,16 @@ contents of current line."
       (back-to-indentation)
       (let* ((tentative-indent (j-compute-indentation))
              ;;FIXME doesn't handle comments correctly
-             (indent (if (looking-at j-dedenting-keywords-regexp)
-                         (max 0 (- tentative-indent j-indent-offset))
-                         tentative-indent))
+             (indent (cond
+                      ((looking-at j-dedenting-keywords-regexp)
+                       (max 0 (- tentative-indent j-indent-offset)))
+                      ((looking-at ":") 0)
+                      (t tentative-indent)))
              (delta (- indent (current-indentation))))
 ;;         (message "###DEBUGi:%d t:%d" indent tentative-indent)
         (indent-line-to indent)
         (back-to-indentation)
-        (goto-char (max (point) (+ old-point delta))))
-      )))
+        (goto-char (max (point) (+ old-point delta)))))))
 
 (defun j-which-explict-definition ()
   "Return nil, `:one-liner' or `:multi-liner' depending on what
@@ -220,6 +222,7 @@ contents of current line."
     (define-key map (kbd "C-c C-c") 'j-console-execute-buffer)
     (define-key map (kbd "C-c C-r") 'j-console-execute-region)
     (define-key map (kbd "C-c C-l") 'j-console-execute-line)
+    (define-key map (kbd "C-M-x")   'j-console-execute-definition)
     (define-key map (kbd "C-c h")   'j-help-lookup-symbol)
     (define-key map (kbd "C-c C-h") 'j-help-lookup-symbol-at-point)
     map)
@@ -232,6 +235,7 @@ contents of current line."
     ["Execute Buffer" j-console-execute-buffer t]
     ["Execute Region" j-console-execute-region t]
     ["Execute Line" j-console-execute-line t]
+    ["Execute Definition" j-console-execute-definition t]
     "---"
     ["J Symbol Look-up" j-help-lookup-symbol t]
     ["J Symbol Dynamic Look-up" j-help-lookup-symbol-at-point t]
@@ -256,7 +260,7 @@ contents of current line."
               beginning-of-defun-function #'j-beginning-of-explicit-definition
               end-of-defun-function       #'j-end-of-explicit-definition
               font-lock-comment-start-skip
-              "NB. *"
+              "NB\\. *"
               font-lock-defaults
               '(j-font-lock-keywords
                 nil nil nil nil

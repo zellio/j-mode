@@ -88,19 +88,61 @@
     ;; (modify-syntax-entry ?\: "_"   table)
     (modify-syntax-entry ?\( "()"  table)
     (modify-syntax-entry ?\) ")("  table)
-    (modify-syntax-entry ?\' "\""  table)
-    (modify-syntax-entry ?N "w 1"  table)
-    (modify-syntax-entry ?B "w 2"  table)
+    (modify-syntax-entry ?\' "."  table)
+    ;; (modify-syntax-entry ?N "w 1"  table)
+    ;; (modify-syntax-entry ?B "w 2"  table)
     (modify-syntax-entry ?\n ">"   table)
-    (modify-syntax-entry ?\r ">"   table)
+    ;; (modify-syntax-entry ?\r ">"   table)
     table)
   "Syntax table for j-mode")
 
 (defalias 'j-mode-syntax-propertize
   (syntax-propertize-rules
-   ("^\\()\\)" (1 "."))
+   ("\\(N\\)\\(B\\)\\." (1 "w 1") (2 "w 2"))
+   ("\\(?:0\\|noun\\)\s+\\(?::\s*0\\|define\\)"
+    (0 (j-font-lock-multiline-string ?:)))
+   ("^\\()\\)" (1 (j-font-lock-multiline-string ?\))))
+   ("{{)n" (0 (j-font-lock-multiline-string ?\{)))
+   ("}}" (0 (j-font-lock-multiline-string ?\})))
    ("{{\\()\\)" (1 "."))
-   ("\\('\\)`?[0-9A-Z_a-z ]*\\('\\)\s*=[.:]" (1 ".") (2 "."))))
+   ("\\('\\)`?[0-9A-Z_a-z ]*\\('\\)\s*=[.:]" (1 ".") (2 "."))
+   ("\\('\\)\\(?:[^'\n]\\|''\\)*\\('\\)" (1 "\"") (2 "\""))))
+
+(defun j-font-lock-multiline-string (arg)
+  (pcase arg
+    (?: (let* ((ppss (save-excursion (backward-char 2) (syntax-ppss)))
+               (string-start (and (eq t (nth 3 ppss)) (nth 8 ppss)))
+               (eol (pos-eol)))
+          (unless string-start
+            (put-text-property eol (1+ eol)
+                               'syntax-table (string-to-syntax "|")))
+          nil))
+    (?\{ (let* ((ppss (save-excursion (backward-char 4) (syntax-ppss)))
+               (string-start (and (eq t (nth 3 ppss)) (nth 8 ppss)))
+               (quote-starting-pos (- (point) 4)))
+          (unless string-start
+            (put-text-property quote-starting-pos (1+ quote-starting-pos)
+                               'syntax-table (string-to-syntax "|"))
+            (put-text-property (+ 2 quote-starting-pos) (+ 3 quote-starting-pos)
+                               'syntax-table (string-to-syntax ".")))
+          nil))
+    (?\) (let* ((ppss (save-excursion (backward-char 2) (syntax-ppss)))
+                (string-start (and (eq t (nth 3 ppss)) (nth 8 ppss)))
+                (quote-starting-pos (- (point) 1)))
+           (if (and string-start (eql (char-after string-start)
+                                      ?\n))
+               (put-text-property (1- quote-starting-pos) quote-starting-pos
+                                  'syntax-table (string-to-syntax "|")))
+           (string-to-syntax ".")))
+    (?\} (let* ((ppss (save-excursion (backward-char 2) (syntax-ppss)))
+                (string-start (and (eq t (nth 3 ppss)) (nth 8 ppss)))
+                (quote-end-pos (point)))
+           (if (and string-start (eql (char-after string-start)
+                                      ?\{))
+               (put-text-property (1- quote-end-pos) quote-end-pos
+                                  'syntax-table (string-to-syntax "|")))
+           nil))))
+
 
 (defvar j-font-lock-constants
   '(
@@ -174,11 +216,11 @@
   (append j-font-lock-len-3-others j-font-lock-len-2-others j-font-lock-len-1-others))
 
 (defvar j-font-lock-len-3-conjunctions
-  '("&.:" "F.." "F.:" "F:." "F::" " ::" " :."))
+  '("&.:" "F.." "F.:" "F:." "F::"))
 (defvar j-font-lock-len-2-conjunctions
   '("t." "S:" "L:" "H." "D:" "D." "d." "F." "F:" "m."
     "&:" "&." "@:" "@." "`:" "!:" "!." ";." "[." "]."
-    "^:" " ." " :"))
+    "^:"))
 (defvar j-font-lock-len-1-conjunctions
   '("&" "@" "`" "\""))
 (defvar j-font-lock-conjunctions
@@ -237,21 +279,35 @@
     (,(regexp-opt j-font-lock-len-1-verbs) . 'j-verb-face)
     (,(regexp-opt j-font-lock-len-1-adverbs) . 'j-adverb-face)
     (,(regexp-opt j-font-lock-len-1-conjunctions) . 'j-conjunction-face)
+    (,(rx (or bol (+ "\s")) (group (or ":" "." ":." "::")))
+     (1 'j-conjunction-face))
     ;;(,(regexp-opt j-font-lock-len-1-others) . 'j-other-face)
     )
   "J Mode font lock keys words")
+
+(defun j-font-lock-docstring-p (state)
+  "Detect if multi-line string should be docstring."
+  (save-excursion
+    (goto-char (nth 8 state))
+    (beginning-of-line)
+    (not (looking-at-p "[_'`a-zA-Z0-9\s]+=[.:]"))))
 
 (defun j-font-lock-syntactic-face-function (state)
   "Function for detection of string vs. Comment. Note: J comments
 are three chars longs, there is no easy / evident way to handle
 this in emacs and it poses problems"
-  (if (nth 3 state) font-lock-string-face
-    (let* ((start-pos (nth 8 state)))
-      (and (<= (+ start-pos 3) (point-max))
-           (eq (char-after start-pos) ?N)
+  (let* ((start-pos (nth 8 state)))
+    (cond
+     ((nth 3 state) (if (and
+                         (eql (char-after start-pos) ?\n)
+                         (j-font-lock-docstring-p state))
+                        font-lock-doc-face
+                      font-lock-string-face))
+     ((and (<= (+ start-pos 3) (point-max))
+           (eql (char-after start-pos) ?N)
            (string= (buffer-substring-no-properties
                      start-pos (+ start-pos 3))
-                    "NB.")
-           font-lock-comment-face))))
+                    "NB."))
+      font-lock-comment-face))))
 
 (provide 'j-font-lock)
