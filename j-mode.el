@@ -128,7 +128,7 @@ contents of current line."
     (save-excursion
       ;; skip empty/comment lines, if that leaves us in the first line, return 0
       (while (and (= (forward-line -1) 0)
-                  (if (looking-at "\\s *\\\\?$")
+                  (if (looking-at "^[ \t]*\\(?:NB\\..*\\)?$")
                       t
                     (setq indent (save-match-data
                                    (back-to-indentation)
@@ -168,9 +168,7 @@ contents of current line."
   kind of explicit definition we are `looking-at'. Modifies `match-data'!"
   ;; XXX we could dump the check for NB. if we prepending '^' to the others
   (cond ((j-thing-outside-string (rx (or (seq bow "define")
-                                         (seq ":" (* "\s") "0"))
-                                     (* "\s")
-                                     eol))
+                                         (seq ":" (* "\s") "0"))))
          :multi-liner)
         ((j-thing-outside-string (rx (or (seq bow "def")
                                          " :")

@@ -91,14 +91,15 @@
     (modify-syntax-entry ?\' "."  table)
     ;; (modify-syntax-entry ?N "w 1"  table)
     ;; (modify-syntax-entry ?B "w 2"  table)
-    (modify-syntax-entry ?\n ">"   table)
+    ;; (modify-syntax-entry ?\n ">"   table)
     ;; (modify-syntax-entry ?\r ">"   table)
     table)
   "Syntax table for j-mode")
 
 (defalias 'j-mode-syntax-propertize
   (syntax-propertize-rules
-   ("\\(N\\)\\(B\\)\\." (1 "w 1") (2 "w 2"))
+   ("\\(N\\)\\(B\\)\\..*$" (1 "w 1") (2 "w 2")
+    (0 (j-font-lock-nota-bene)))
    ("\\(?:0\\|noun\\)\s+\\(?::\s*0\\|define\\)"
     (0 (j-font-lock-multiline-string ?:)))
    ("^\\()\\)" (1 (j-font-lock-multiline-string ?\))))
@@ -108,12 +109,16 @@
    ("\\('\\)`?[0-9A-Z_a-z ]*\\('\\)\s*=[.:]" (1 ".") (2 "."))
    ("\\('\\)\\(?:[^'\n]\\|''\\)*\\('\\)" (1 "\"") (2 "\""))))
 
+(defun j-font-lock-nota-bene ()
+  (let ((eol (pos-eol)))
+    (put-text-property (1- eol) eol
+                       'syntax-table (string-to-syntax ">"))))
 (defun j-font-lock-multiline-string (arg)
   (pcase arg
-    (?: (let* ((ppss (save-excursion (backward-char 2) (syntax-ppss)))
+    (?: (let* ((ppss (syntax-ppss))
                (string-start (and (eq t (nth 3 ppss)) (nth 8 ppss)))
                (eol (pos-eol)))
-          (unless string-start
+          (unless (or string-start (> (1+ eol) (point-max)))
             (put-text-property eol (1+ eol)
                                'syntax-table (string-to-syntax "|")))
           nil))
