@@ -241,7 +241,7 @@ contents of current line."
 
 ;;;###autoload
 (define-derived-mode j-mode prog-mode "J"
-  "Major mode for editing J"
+  "Major mode for editing J."
   :group 'j
   :syntax-table j-font-lock-syntax-table
   (setq-local comment-start
@@ -266,9 +266,16 @@ contents of current line."
                 (font-lock-syntactic-face-function
                  . j-font-lock-syntactic-face-function))))
 
+;;;###autoload
+(define-derived-mode j-lab-mode j-mode "J Lab"
+  "Mojor mode for J Labs."
+  :group 'j
+  (setq-local syntax-propertize-function #'j-lab-mode-syntax-propertize))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode))
+(progn
+  (add-to-list 'auto-mode-alist '("\\.ij[rsp]$" . j-mode))
+  (add-to-list 'auto-mode-alist '("\\.ijt$" . j-lab-mode)))
 
 (provide 'j-mode)
 
