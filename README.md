@@ -17,7 +17,8 @@ place in your load path and load / require normally.
 (autoload 'j-mode "j-mode.el" "Major mode for editing J files" t)
 
 ;; Add for detection of j source files if the auto-load fails
-(add-to-list 'auto-mode-alist '("\\.ij[rstp]$" . j-mode))
+(add-to-list 'auto-mode-alist '("\\.ij[rsp]$" . j-mode))
+(add-to-list 'auto-mode-alist '("\\.ijt$" . j-lab-mode))
 ```
 
 ## J Font Lock
@@ -28,7 +29,7 @@ various parts of speech. Those faces are `j-verb-face` `j-adverb-face`
 standard built in faces to help meet your need.
 
 ```lisp
-(custom-set-face
+(custom-set-faces
  '(j-verb-face ((t (:foreground "Red"))))
  '(j-adverb-face ((t (:foreground "Green"))))
  '(j-conjunction-face ((t (:foreground "Blue"))))
