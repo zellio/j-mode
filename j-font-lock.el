@@ -5,7 +5,7 @@
 ;; Copyright (C) 2023, 2024 LdBeth
 ;;
 ;; Authors: Zachary Elliott <ZacharyElliott1@gmail.com>
-;; URL: http://github.com/ldbeth/j-mode
+;; URL: http://github.com/zellio/j-mode
 ;; Version: 2.0.1
 ;; Keywords: J, Langauges
 
