@@ -73,7 +73,7 @@
   (rx (or (seq bow
                (or (regexp
                     (regexp-opt
-                     '(;;"do\\."
+                     '(;;"do."
                        "if." "else." "elseif."
                        "select." "case." "fcase."
                        "throw."

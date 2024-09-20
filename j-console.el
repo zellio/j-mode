@@ -119,17 +119,18 @@ the containing buffer"
   (switch-to-buffer-other-window (process-buffer (j-console-ensure-session)))
   (inferior-j-mode))
 
-(defun j-console-execute-region ( start end )
+(defun j-console-execute-region (start end)
   "Sends current region to the j-console-cmd session and exectues it"
   (interactive "r")
   (when (= start end)
     (error "Region is empty"))
   (let ((region (buffer-substring-no-properties start end))
         (session (j-console-ensure-session)))
-    (pop-to-buffer (process-buffer session))
-    (goto-char (point-max))
-    (insert (format "%s" region))
-    (comint-send-input)))
+    (with-current-buffer (process-buffer session)
+      (goto-char (point-max))
+      (insert (format "%s" region))
+      (comint-send-input))
+    (display-buffer (process-buffer session))))
 
 (defun j-console-execute-line ()
   "Sends current line to the j-console-cmd session and exectues it"
