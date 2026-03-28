@@ -211,9 +211,6 @@
       "if."  "else."  "elseif."  "return."  "select."  "case."  "fcase."  "throw."
       "try."  "catch."  "catchd."  "catcht."  "end."))
 
-  (defconst j-font-lock-direct-definition
-    '("{{" "}}"))
-
   (defconst j-font-lock-foreign-conjunctions
     '("0!:" "1!:" "2!:" "3!:" "4!:" "5!:" "6!:" "7!:" "8!:" "9!:" "13!:"
       "15!:" "18!:" "128!:" ))
@@ -276,30 +273,37 @@
   (eval-when-compile
     `((,(rx (group (+ (any "_a-zA-Z0-9")))
             (* "\s") "=" (or "." ":"))
-       (1 font-lock-variable-name-face))
+       (1 'font-lock-variable-name-face))
       (,j-font-lock-multiassign-regexp
-       (1 font-lock-keyword-face)
-       (2 font-lock-keyword-face)
+       (1 'font-lock-keyword-face)
+       (2 'font-lock-keyword-face)
        ("[_a-zA-Z0-9]+"
         (j-font-lock-prematch-variable) nil
-        (0 font-lock-variable-name-face)))
+        (0 'font-lock-variable-name-face)))
+      (,(rx (group "{{")
+            (opt (group ")"
+                        (any ?m ?d ?v ?a ?c ?n ?*)
+                        (opt (* ?\ ) ?:))))
+       (1 'font-lock-keyword-face)
+       (2 'font-lock-preprocessor-face))
+      ("}}" . 'font-lock-keyword-face)
       (,(rx bow (any "a-zA-Z")
             (* (any "_a-zA-Z0-9"))
             "_:") ;; Self-Effacing References
        . font-lock-warning-face)
-      (,(regexp-opt j-font-lock-foreign-conjunctions) . font-lock-warning-face)
+      (,(regexp-opt j-font-lock-foreign-conjunctions) . 'font-lock-warning-face)
       (,(rx symbol-start
             (or (regexp (regexp-opt j-font-lock-control-structures))
                 (seq (or "for" "goto" "label")
                      "_" (+ (any "a-zA-Z")) ".")))
-       . font-lock-keyword-face)
+       . 'font-lock-keyword-face)
       (,(rx symbol-start (regexp (regexp-opt j-font-lock-builtins)) eow)
-       . font-lock-builtin-face)
+       . 'font-lock-builtin-face)
       (,(rx symbol-start
             (regexp
              (regexp-opt j-font-lock-constants))
             eow)
-       . font-lock-constant-face)
+       . 'font-lock-constant-face)
       (,(regexp-opt j-font-lock-len-3-verbs)
        . 'j-verb-face)
       (,(regexp-opt j-font-lock-len-3-adverbs) . 'j-adverb-face)
@@ -311,7 +315,6 @@
       (,(regexp-opt j-font-lock-len-2-adverbs) . 'j-adverb-face)
       (,(regexp-opt j-font-lock-len-2-conjunctions) . 'j-conjunction-face)
       (,(regexp-opt j-font-lock-len-2-others) . 'j-other-face)
-      (,(regexp-opt j-font-lock-direct-definition) . 'font-lock-keyword-face)
       (,(regexp-opt j-font-lock-len-1-verbs) . 'j-verb-face)
       (,(regexp-opt j-font-lock-len-1-adverbs) . 'j-adverb-face)
       (,(regexp-opt j-font-lock-len-1-conjunctions) . 'j-conjunction-face)
