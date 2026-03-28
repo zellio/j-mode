@@ -280,13 +280,11 @@
        ("[_a-zA-Z0-9]+"
         (j-font-lock-prematch-variable) nil
         (0 'font-lock-variable-name-face)))
-      (,(rx (group "{{")
-            (opt (group ")"
-                        (any ?m ?d ?v ?a ?c ?n ?*)
-                        (opt (* ?\ ) ?:))))
-       (1 'font-lock-keyword-face)
-       (2 'font-lock-preprocessor-face))
-      ("}}" . 'font-lock-keyword-face)
+      (,(rx "{{"
+            (group ")"
+                   (any ?m ?d ?v ?a ?c ?n ?*)
+                   (opt (* ?\ ) ?:)))
+       (1 'font-lock-preprocessor-face))
       (,(rx bow (any "a-zA-Z")
             (* (any "_a-zA-Z0-9"))
             "_:") ;; Self-Effacing References
@@ -315,6 +313,7 @@
       (,(regexp-opt j-font-lock-len-2-adverbs) . 'j-adverb-face)
       (,(regexp-opt j-font-lock-len-2-conjunctions) . 'j-conjunction-face)
       (,(regexp-opt j-font-lock-len-2-others) . 'j-other-face)
+      (,(rx (or "{{" "}}")) . 'font-lock-keyword-face)
       (,(regexp-opt j-font-lock-len-1-verbs) . 'j-verb-face)
       (,(regexp-opt j-font-lock-len-1-adverbs) . 'j-adverb-face)
       (,(regexp-opt j-font-lock-len-1-conjunctions) . 'j-conjunction-face)
