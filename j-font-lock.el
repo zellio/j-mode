@@ -119,7 +119,7 @@
 ;; NB. ======== blocks are recognized as docstring.
 (defalias 'j-lab-mode-syntax-propertize
   (syntax-propertize-rules
-   ("\\(N\\)\\(?:B\\.\s*\\(?:===\\|---\\)\\|ote\s*''\\)"
+   ("\\(N\\)\\(?:B\\.\s*\\(?:===\\|---\\)\\|ote\s*\\(?:''\\|0\\)\\)"
     (1 (j-font-lock-multiline-string ?N)))
    ("\\(N\\)\\(B\\)\\..*$" (1 "w 1") (2 "w 2")
     (0 (j-font-lock-nota-bene)))
